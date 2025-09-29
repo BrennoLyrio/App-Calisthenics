@@ -1,0 +1,83 @@
+### Teste do Frontend - Calisthenics App
+
+# Este arquivo é para documentar os testes do frontend
+# O app React Native deve ser testado diretamente no dispositivo/emulador
+
+### Fluxo de Teste Completo:
+
+# 1. Tela de Boas-vindas
+# - Verificar se a tela carrega corretamente
+# - Testar botão "Começar Agora" → deve ir para Login
+# - Testar botão "Já tenho uma conta" → deve ir para Login
+
+# 2. Tela de Login
+# - Testar validação de email inválido
+# - Testar validação de senha vazia
+# - Testar login com credenciais válidas
+# - Testar link "Esqueceu sua senha?"
+# - Testar link "Inscrever-se com email" → deve ir para Register
+
+# 3. Tela de Registro
+# - Testar validação de todos os campos
+# - Testar confirmação de senha
+# - Testar validação de idade (13-100)
+# - Testar validação de peso (30-300 kg)
+# - Testar validação de altura (100-250 cm)
+# - Testar registro com dados válidos
+
+# 4. Fluxo de Onboarding
+# - Tela 1: Seleção de objetivo (A-G)
+# - Tela 2: Seleção de experiência
+# - Tela 3: Seleção de recursos (múltipla)
+# - Tela 4: Dados físicos (peso, altura, idade)
+
+# 5. Tela Principal
+# - Verificar se dados do usuário são exibidos
+# - Testar botão de logout
+# - Verificar cards de ação rápida
+
+### Testes de Navegação:
+# - Voltar entre telas
+# - Navegação fluida
+# - Animações de transição
+
+### Testes de UI/UX:
+# - Responsividade em diferentes tamanhos de tela
+# - Gradientes e cores
+# - Ícones e botões
+# - Formulários e validação
+
+### Testes de Integração:
+# - Comunicação com backend
+# - Armazenamento local (AsyncStorage)
+# - Gerenciamento de estado (Context)
+# - Autenticação JWT
+
+### Comandos para Testar:
+
+# Iniciar o servidor de desenvolvimento
+# npm start
+
+# Executar no Android
+# npm run android
+
+# Executar no iOS
+# npm run ios
+
+# Executar no Web
+# npm run web
+
+### Dados de Teste:
+
+# Usuário de teste:
+# Nome: João Silva
+# Email: joao@teste.com
+# Senha: 123456
+# Idade: 25
+# Peso: 70
+# Altura: 175
+# Nível: iniciante
+
+# Objetivo: Ganho de músculo e força
+# Experiência: Iniciante
+# Recursos: Acessar planos personalizados, Acompanhar progresso
