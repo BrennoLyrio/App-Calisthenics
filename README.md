@@ -152,4 +152,4 @@ npm run web
 
 ## 📞 Suporte
 
-Para dúvidas ou problemas, consulte a documentação do backend ou entre em contato com a equipe de desenvolvimento.
+Para dúvidas ou problemas, consulte a documentação do backend ou entre em contato
