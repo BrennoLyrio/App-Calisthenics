@@ -11,12 +11,18 @@ import {
   Workout,
   CreateWorkoutRequest,
   Goal,
+  WorkoutHistory,
+  SaveWorkoutHistoryRequest,
+  WorkoutStats,
 } from '../types';
 
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
+    console.log('🌐 [API] BaseURL carregada:', API_BASE_URL);
+    console.log('🌐 [API] Tipo da BaseURL:', typeof API_BASE_URL);
+    
     this.api = axios.create({
       baseURL: API_BASE_URL,
       timeout: 10000,
@@ -265,6 +271,46 @@ class ApiService {
 
   async clearUserData(): Promise<void> {
     await AsyncStorage.removeItem(StorageKeys.USER_DATA);
+  }
+
+  // Workout History Methods
+  async saveWorkoutHistory(data: SaveWorkoutHistoryRequest): Promise<WorkoutHistory> {
+    const response: AxiosResponse<ApiResponse<WorkoutHistory>> = await this.api.post(
+      '/workout-history',
+      data
+    );
+    return response.data.data!;
+  }
+
+  async getWorkoutHistory(page: number = 1, limit: number = 20, days?: number): Promise<ApiResponse<WorkoutHistory[]>> {
+    const params: any = { page, limit };
+    if (days) params.days = days;
+    
+    const response: AxiosResponse<ApiResponse<WorkoutHistory[]>> = await this.api.get(
+      '/workout-history',
+      { params }
+    );
+    return response.data;
+  }
+
+  async getWorkoutHistoryById(id: number): Promise<WorkoutHistory> {
+    const response: AxiosResponse<ApiResponse<WorkoutHistory>> = await this.api.get(
+      `/workout-history/${id}`
+    );
+    return response.data.data!;
+  }
+
+  async getWorkoutStats(days: number = 30, weeks: number = 12): Promise<WorkoutStats> {
+    const params = { days, weeks };
+    const response: AxiosResponse<ApiResponse<WorkoutStats>> = await this.api.get(
+      '/workout-history/stats',
+      { params }
+    );
+    return response.data.data!;
+  }
+
+  async deleteWorkoutHistory(id: number): Promise<void> {
+    await this.api.delete(`/workout-history/${id}`);
   }
 }
 

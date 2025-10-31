@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import YoutubePlayer from 'react-native-youtube-iframe';
 import { Button, Card } from '../components';
 import { Colors, Typography, Spacing, BorderRadius } from '../constants';
 import { Exercise } from '../types';
@@ -38,6 +39,14 @@ export const ExercisePreviewScreen: React.FC<ExercisePreviewScreenProps> = ({
 }) => {
   const { exercise, duration, reps, restTime, isFromWorkout = false } = route.params;
   const [selectedDifficulty, setSelectedDifficulty] = useState(exercise.nivel_dificuldade);
+  const [playing, setPlaying] = useState(false);
+
+  // Helper function to extract YouTube video ID
+  const getYouTubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? match[2] : null;
+  };
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
@@ -127,7 +136,26 @@ export const ExercisePreviewScreen: React.FC<ExercisePreviewScreenProps> = ({
 
             {/* Exercise Image/Video */}
             <View style={styles.exerciseImageContainer}>
-              {exercise.imagem_url ? (
+              {exercise.video_url && getYouTubeVideoId(exercise.video_url) ? (
+                <View style={styles.videoWrapper}>
+                  <YoutubePlayer
+                    height={250}
+                    videoId={getYouTubeVideoId(exercise.video_url)!}
+                    play={playing}
+                    onChangeState={(state) => {
+                      if (state === 'playing') {
+                        setPlaying(true);
+                      } else if (state === 'paused' || state === 'ended') {
+                        setPlaying(false);
+                      }
+                    }}
+                    webViewStyle={{ opacity: 0.99, borderRadius: BorderRadius.lg }}
+                    webViewProps={{
+                      androidLayerType: 'hardware',
+                    }}
+                  />
+                </View>
+              ) : exercise.imagem_url ? (
                 <Image source={{ uri: exercise.imagem_url }} style={styles.exerciseImage} />
               ) : (
                 <View style={styles.placeholderImage}>
@@ -318,13 +346,24 @@ const styles = StyleSheet.create({
   exerciseImageContainer: {
     height: 250,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.lg,
+    marginBottom: 0,
+    overflow: 'hidden',
+  },
+  videoWrapper: {
+    width: '100%',
+    height: '100%',
+    borderRadius: BorderRadius.lg,
     overflow: 'hidden',
   },
   exerciseImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  videoPlayer: {
+    width: '100%',
+    height: 250,
+    backgroundColor: Colors.light,
   },
   placeholderImage: {
     width: '100%',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,8 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
 }) => {
   const { totalExercises, completedExercises, totalDuration, totalCalories } = route.params;
 
-  const getMotivationalMessage = () => {
+  // Mensagem motivacional fixa (calculada apenas uma vez)
+  const motivationalMessage = useMemo(() => {
     const messages = [
       'Parabéns! Você foi incrível! 🎉',
       'Excelente trabalho! Continue assim! 💪',
@@ -45,24 +46,31 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
       'Fantástico! Sua dedicação é inspiradora! ❤️',
     ];
     return messages[Math.floor(Math.random() * messages.length)];
-  };
+  }, []); // Array vazio garante que só executa uma vez
 
-  const getAchievementLevel = () => {
+  // Nível de conquista (calculado apenas uma vez)
+  const achievement = useMemo(() => {
     const completionRate = (completedExercises / totalExercises) * 100;
     if (completionRate >= 100) return { level: 'Perfeito', color: Colors.success, icon: 'trophy' };
     if (completionRate >= 80) return { level: 'Excelente', color: Colors.primary, icon: 'medal' };
     if (completionRate >= 60) return { level: 'Muito Bom', color: Colors.warning, icon: 'star' };
     return { level: 'Bom Trabalho', color: Colors.info, icon: 'thumbs-up' };
-  };
-
-  const achievement = getAchievementLevel();
+  }, [completedExercises, totalExercises]);
 
   const handleGoHome = () => {
-    navigation.navigate('Main');
+    // Resetar o stack de navegação para evitar voltar para a tela de conclusão
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Main' }],
+    });
   };
 
   const handleNewWorkout = () => {
-    navigation.navigate('Exercises');
+    // Resetar o stack e ir para a tela de exercícios
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Main' }, { name: 'Exercises' }],
+    });
   };
 
   const handleShare = () => {
@@ -103,7 +111,7 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
               </View>
               
               <Text style={styles.achievementLevel}>{achievement.level}</Text>
-              <Text style={styles.motivationalMessage}>{getMotivationalMessage()}</Text>
+              <Text style={styles.motivationalMessage}>{motivationalMessage}</Text>
             </View>
 
             {/* Workout Summary */}
@@ -148,14 +156,14 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {completedExercises} de {totalExercises} exercícios
+                  {completedExercises} séries de {totalExercises} exercícios
                 </Text>
               </View>
             </Card>
 
             {/* Motivational Quote */}
             <Card style={styles.quoteCard} shadow>
-              <Ionicons name="quote" size={24} color={Colors.primary} />
+              <Ionicons name="chatbox-ellipses" size={24} color={Colors.primary} />
               <Text style={styles.quoteText}>
                 "A disciplina é a ponte entre metas e conquistas."
               </Text>
@@ -170,7 +178,6 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
                 size="large"
                 gradient
                 style={styles.newWorkoutButton}
-                leftIcon="refresh"
               />
               
               <Button
@@ -179,7 +186,6 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
                 variant="secondary"
                 size="large"
                 style={styles.shareButton}
-                leftIcon="share"
               />
               
               <Button
@@ -188,7 +194,6 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
                 variant="outline"
                 size="large"
                 style={styles.homeButton}
-                leftIcon="home"
               />
             </View>
           </ScrollView>

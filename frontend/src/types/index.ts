@@ -39,10 +39,13 @@ export interface AuthResponse {
 }
 
 // Exercise Types
+export type ExerciseType = 'timer' | 'reps';
+
 export interface Exercise {
   id: number;
   nome: string;
   categoria: 'superiores' | 'inferiores' | 'core' | 'completo';
+  tipo: ExerciseType;
   descricao_textual: string;
   nivel_dificuldade: 'iniciante' | 'intermediario' | 'avancado';
   musculos_trabalhados: string[];
@@ -52,9 +55,21 @@ export interface Exercise {
   dicas: string[];
   variacoes: string[];
   equipamentos_necessarios: string[];
-  tempo_estimado: number;
+  tempo_estimado?: number;
+  repeticoes_estimadas?: number;
   calorias_estimadas: number;
   ativo: boolean;
+}
+
+export type ExerciseExecutionType = 'reps' | 'time';
+
+export interface WorkoutExerciseDetail {
+  exercise: Exercise;
+  type: ExerciseExecutionType;
+  duration?: number;
+  reps?: number;
+  sets: number;
+  restTime: number;
 }
 
 // Workout Types
@@ -81,6 +96,46 @@ export interface WorkoutExercise {
   descanso?: number;
   ordem: number;
   exercise?: Exercise;
+}
+
+export interface WorkoutHistory {
+  id: number;
+  id_usuario: number;
+  id_treino: number;
+  data_execucao: string;
+  duracao: number;
+  series_realizadas: number;
+  repeticoes_realizadas: number;
+  notas?: string;
+  avaliacao_dificuldade?: number;
+  calorias_queimadas?: number;
+  batimentos_medio?: number;
+  satisfacao?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SaveWorkoutHistoryRequest {
+  id_treino: number;
+  duracao: number;
+  series_realizadas: number;
+  repeticoes_realizadas: number;
+  notas?: string;
+  avaliacao_dificuldade?: number;
+  calorias_queimadas?: number;
+  batimentos_medio?: number;
+  satisfacao?: number;
+}
+
+export interface WorkoutStats {
+  generalStats: {
+    total_workouts?: number;
+    avg_duration?: number;
+    total_calories?: number;
+    avg_difficulty?: number;
+    avg_satisfaction?: number;
+  };
+  weeklyProgress: any[];
 }
 
 export interface CreateWorkoutRequest {
@@ -147,19 +202,20 @@ export type RootStackParamList = {
     reps?: number;
     restTime?: number;
     isFromWorkout?: boolean;
-  };
-  WorkoutSession: {
     workout?: {
-      exercises: Array<{
-        exercise: Exercise;
-        duration?: number;
-        reps?: number;
-        sets: number;
-        restTime: number;
-      }>;
+      exercises: WorkoutExerciseDetail[];
       totalDuration: number;
       totalCalories: number;
     };
+    exerciseIndex?: number;
+  };
+  WorkoutSession: {
+    workout?: {
+      exercises: WorkoutExerciseDetail[];
+      totalDuration: number;
+      totalCalories: number;
+    };
+    initialExerciseIndex?: number;
     exercise?: Exercise;
     duration?: number;
     reps?: number;
@@ -170,6 +226,9 @@ export type RootStackParamList = {
     completedExercises: number;
     totalDuration: number;
     totalCalories: number;
+    totalSets: number;
+    completedSets: number;
+    sessionDurationSeconds: number;
   };
   Progress: undefined;
 };

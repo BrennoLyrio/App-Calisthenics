@@ -1,10 +1,18 @@
 import { DataTypes, Model, Optional, Op } from 'sequelize';
 import sequelize from '../config/database';
 
+export type ExerciseType = 'timer' | 'reps';
+
+export const EXERCISE_TYPES = {
+  TIMER: 'timer' as ExerciseType,
+  REPS: 'reps' as ExerciseType
+};
+
 interface ExerciseAttributes {
   id: number;
   nome: string;
   categoria: 'superiores' | 'inferiores' | 'core' | 'completo';
+  tipo: ExerciseType; // 'timer' ou 'reps'
   descricao_textual: string;
   nivel_dificuldade: 'iniciante' | 'intermediario' | 'avancado';
   musculos_trabalhados: string[];
@@ -14,14 +22,15 @@ interface ExerciseAttributes {
   dicas: string[];
   variacoes: string[];
   equipamentos_necessarios: string[];
-  tempo_estimado: number;
+  tempo_estimado?: number; // Apenas para exercícios do tipo 'timer'
+  repeticoes_estimadas?: number; // Apenas para exercícios do tipo 'reps'
   calorias_estimadas: number;
   ativo: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface ExerciseCreationAttributes extends Optional<ExerciseAttributes, 'id' | 'video_url' | 'imagem_url' | 'ativo' | 'createdAt' | 'updatedAt'> {}
+interface ExerciseCreationAttributes extends Optional<ExerciseAttributes, 'id' | 'video_url' | 'imagem_url' | 'tempo_estimado' | 'repeticoes_estimadas' | 'ativo' | 'createdAt' | 'updatedAt'> {}
 
 class Exercise extends Model<ExerciseAttributes, ExerciseCreationAttributes> implements ExerciseAttributes {
   public id!: number;
@@ -36,7 +45,9 @@ class Exercise extends Model<ExerciseAttributes, ExerciseCreationAttributes> imp
   public dicas!: string[];
   public variacoes!: string[];
   public equipamentos_necessarios!: string[];
-  public tempo_estimado!: number;
+  public tipo!: ExerciseType;
+  public tempo_estimado?: number;
+  public repeticoes_estimadas?: number;
   public calorias_estimadas!: number;
   public ativo!: boolean;
   public readonly createdAt!: Date;
@@ -142,14 +153,24 @@ Exercise.init(
       allowNull: false,
       defaultValue: [],
     },
+    tipo: {
+      type: DataTypes.ENUM('timer', 'reps'),
+      allowNull: false,
+      defaultValue: 'reps'
+    },
     tempo_estimado: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 30,
+      allowNull: true,
       validate: {
-        min: 5,
-        max: 300,
-      },
+        min: 1
+      }
+    },
+    repeticoes_estimadas: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 1
+      }
     },
     calorias_estimadas: {
       type: DataTypes.INTEGER,

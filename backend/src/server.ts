@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import exerciseRoutes from './routes/exercises';
 import workoutRoutes from './routes/workouts';
+import workoutHistoryRoutes from './routes/workoutHistory';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -41,9 +42,18 @@ app.use(cors({
         'http://localhost:3000',
         'http://localhost:19006',
         'http://192.168.15.9:3000',
+        'http://192.168.15.4:3000',
+        'http://192.168.15.3:3000',
+        'http://192.168.15.6:3000',
         'http://192.168.15.9:19006',
         'http://192.168.15.9:8081', // Expo dev server
-        'exp://192.168.15.9:8081'   // Expo protocol
+        'exp://192.168.15.9:8081',
+        
+        'http://172.20.10.2:3000',
+        'http://172.20.10.2:19006',
+        'http://172.20.10.2:8081',
+        'exp://172.20.10.2:8081',
+        // Expo protocol
       ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -92,6 +102,7 @@ app.get('/health', (req, res) => {
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/exercises`, exerciseRoutes);
 app.use(`/api/${API_VERSION}/workouts`, workoutRoutes);
+app.use(`/api/${API_VERSION}/workout-history`, workoutHistoryRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -102,7 +113,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: `/api/${API_VERSION}/auth`,
       exercises: `/api/${API_VERSION}/exercises`,
-      workouts: `/api/${API_VERSION}/workouts`
+      workouts: `/api/${API_VERSION}/workouts`,
+      workoutHistory: `/api/${API_VERSION}/workout-history`
     }
   });
 });

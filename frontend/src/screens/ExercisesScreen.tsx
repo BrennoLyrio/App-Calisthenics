@@ -59,11 +59,10 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
         
         // Gerar treino personalizado baseado no perfil
         const workoutExercises = exercises.map((exercise, index) => {
-          const baseDuration = exercise.tempo_estimado || 30;
-          const baseReps = 12;
+          // Definir configurações base
           const baseSets = 3;
           const baseRest = 30;
-
+          
           // Ajustar baseado no nível
           let multiplier = 1;
           if (user?.nivel_condicionamento === 'iniciante') {
@@ -71,14 +70,25 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
           } else if (user?.nivel_condicionamento === 'avancado') {
             multiplier = 1.2;
           }
-
-          return {
+          
+          const exerciseData: any = {
             exercise,
-            duration: Math.round(baseDuration * multiplier),
-            reps: Math.round(baseReps * multiplier),
             sets: baseSets,
             restTime: Math.round(baseRest * multiplier),
           };
+          
+          // Usar o tipo definido no backend para determinar se é timer ou repetições
+          if (exercise.tipo === 'timer') {
+            // Para exercícios com timer, usar o tempo_estimado
+            const baseDuration = exercise.tempo_estimado || 30;
+            exerciseData.duration = Math.round(baseDuration * multiplier);
+          } else {
+            // Para exercícios com repetições, usar repeticoes_estimadas
+            const baseReps = exercise.repeticoes_estimadas || 12;
+            exerciseData.reps = Math.round(baseReps * multiplier);
+          }
+          
+          return exerciseData;
         });
 
         // Calcular totais

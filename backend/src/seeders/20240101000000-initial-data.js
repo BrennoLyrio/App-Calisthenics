@@ -25,12 +25,15 @@ module.exports = {
           'Respire na subida e expire na descida'
         ],
         variacoes: ['flexão inclinada', 'flexão declinada', 'flexão diamante'],
-        equipamentos_necessarios: [],
-        tempo_estimado: 30,
+        equipamentos_necessarios: ['nenhum'],
+        video_url: 'https://www.youtube.com/watch?v=GOj4TMPVuZg',
+        tipo: 'reps',
+        repeticoes_estimadas: 10,
+        tempo_estimado: 0,
         calorias_estimadas: 8,
         ativo: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         nome: 'Agachamento',
@@ -51,12 +54,15 @@ module.exports = {
           'Mantenha o core contraído'
         ],
         variacoes: ['agachamento sumo', 'agachamento búlgaro', 'agachamento com salto'],
-        equipamentos_necessarios: [],
-        tempo_estimado: 30,
-        calorias_estimadas: 10,
+        equipamentos_necessarios: ['nenhum'],
+        video_url: 'https://www.youtube.com/watch?v=XI-4buHz7Xo',
+        tipo: 'timer',
+        tempo_estimado: 45,
+        repeticoes_estimadas: 0,
+        calorias_estimadas: 12,
         ativo: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         nome: 'Prancha',
@@ -77,12 +83,15 @@ module.exports = {
           'Olhe para o chão'
         ],
         variacoes: ['prancha lateral', 'prancha com elevação de perna', 'prancha com toque no ombro'],
-        equipamentos_necessarios: [],
+        equipamentos_necessarios: ['nenhum'],
+        video_url: 'https://www.youtube.com/watch?v=thZZtS9gapk',
+        tipo: 'timer',
         tempo_estimado: 60,
+        repeticoes_estimadas: 0,
         calorias_estimadas: 5,
         ativo: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         nome: 'Burpee',
@@ -104,12 +113,15 @@ module.exports = {
           'Mantenha o core contraído'
         ],
         variacoes: ['burpee sem flexão', 'burpee com salto', 'burpee com elevação de joelho'],
-        equipamentos_necessarios: [],
+        equipamentos_necessarios: ['nenhum'],
+        video_url: 'https://www.youtube.com/watch?v=MKuYq5FR_CM',
+        tipo: 'timer',
         tempo_estimado: 45,
+        repeticoes_estimadas: 0,
         calorias_estimadas: 15,
         ativo: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         nome: 'Prancha Lateral',
@@ -130,12 +142,15 @@ module.exports = {
           'Respire normalmente'
         ],
         variacoes: ['prancha lateral com elevação de perna', 'prancha lateral com rotação'],
-        equipamentos_necessarios: [],
+        equipamentos_necessarios: ['nenhum'],
+        video_url: 'https://www.youtube.com/watch?v=RPr51FgCYbA',
+        tipo: 'timer',
         tempo_estimado: 45,
+        repeticoes_estimadas: 0,
         calorias_estimadas: 6,
         ativo: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ];
 
@@ -167,8 +182,8 @@ module.exports = {
         dificuldade_final: 6,
         calorias_estimadas_total: 450,
         tempo_estimado_diario: 20,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       },
       {
         nome: '6 Semanas para a Primeira Barra Fixa',
@@ -194,8 +209,8 @@ module.exports = {
         dificuldade_final: 8,
         calorias_estimadas_total: 1200,
         tempo_estimado_diario: 25,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ];
 

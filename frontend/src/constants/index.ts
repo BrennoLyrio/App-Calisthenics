@@ -1,5 +1,6 @@
 // API Configuration
-export const API_BASE_URL = 'http://192.168.15.9:3000/api/v1';
+// export const API_BASE_URL = ['http://192.168.15.9:3000/api/v1', 'http://172.20.10.2:3000/api/v1'];
+export const API_BASE_URL = 'http://192.168.15.6:3000/api/v1';
 
 // Colors
 export const Colors = {
