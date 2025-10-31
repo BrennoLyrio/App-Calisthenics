@@ -51,7 +51,7 @@ Desenvolvido com as mais modernas tecnologias mobile, garantindo performance, es
 | ID | User Story | Prioridade | Estimativa | Sprint |
 |---|---|---|---|---|
 | RF01 | Como um novo usuário, quero criar um perfil com meus dados (idade, peso, altura, nível) para receber treinos personalizados. | Alta | 8 pontos | 1 |
-| RF02 | Como um usuário, quero seguir um plano de progressão estruturado (iniciante ao avançado) para evoluir de forma segura. | Alta | 13 pontos | 1 |
+| RF02 | Como um usuário iniciante, quero seguir um plano de treino para haver uma progressão estruturado evoluindo de forma segura. | Alta | 13 pontos | 1 |
 | RF03 | Como um usuário, quero assistir a vídeos demonstrativos para aprender a execução correta dos exercícios. | Alta | 21 pontos | 2 |
 | RF04 | Como um usuário, quero ler explicações textuais detalhadas sobre cada exercício para ter dicas de postura e respiração. | Alta | 13 pontos | 2 |
 | RF05 | Como um usuário, quero acessar uma biblioteca de exercícios organizada por categorias para encontrar movimentos específicos. | Alta | 21 pontos | 2 |
@@ -152,4 +152,4 @@ npm run web
 
 ## 📞 Suporte
 
-Para dúvidas ou problemas, consulte a documentação do backend ou entre em contato com a equipe de desenvolvimento.
+Para dúvidas ou problemas, consulte a documentação do backend ou entre em contato
