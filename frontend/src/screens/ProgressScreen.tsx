@@ -126,6 +126,27 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({ navigation }) =>
     return Math.round((difficulty / 10) * 5 * 10) / 10; // Round to 1 decimal
   };
 
+  // Get category label
+  const getCategoryLabel = (category: string): string => {
+    const labels: { [key: string]: string } = {
+      'superiores': 'Superiores',
+      'inferiores': 'Inferiores',
+      'core': 'Core',
+      'completo': 'Completo',
+    };
+    return labels[category] || category;
+  };
+
+  // Parse workout metadata from notas
+  const parseWorkoutMetadata = (notas?: string) => {
+    if (!notas) return null;
+    try {
+      return JSON.parse(notas);
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Get daily progress data for recent workouts
   const getDailyProgressData = () => {
     if (!history || history.length === 0) {
@@ -481,56 +502,99 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({ navigation }) =>
 
     return (
       <View style={styles.tabContent}>
-        {history.map((item) => (
-          <Card key={item.id} style={styles.historyCard}>
-            <View style={styles.historyHeader}>
-              <View style={styles.historyDate}>
-                <Ionicons name="calendar" size={16} color={Colors.primary} />
-                <Text style={styles.historyDateText}>
-                  {new Date(item.data_execucao).toLocaleDateString('pt-BR')}
-                </Text>
-              </View>
-              {item.avaliacao_dificuldade && (
-                <View style={styles.historyRating}>
-                  {[...Array(5)].map((_, i) => {
-                    const normalizedIntensity = normalizeIntensity(item.avaliacao_dificuldade!);
-                    return (
-                      <Ionicons
-                        key={i}
-                        name={i < normalizedIntensity ? 'flash' : 'flash-outline'}
-                        size={14}
-                        color={Colors.primary}
-                      />
-                    );
-                  })}
+        {history.map((item) => {
+          const metadata = parseWorkoutMetadata(item.notas);
+          
+          return (
+            <Card key={item.id} style={styles.historyCard}>
+              <View style={styles.historyHeader}>
+                <View style={styles.historyDate}>
+                  <Ionicons name="calendar" size={16} color={Colors.primary} />
+                  <Text style={styles.historyDateText}>
+                    {new Date(item.data_execucao).toLocaleDateString('pt-BR')}
+                  </Text>
                 </View>
-              )}
-            </View>
+                {item.avaliacao_dificuldade && (
+                  <View style={styles.historyRating}>
+                    {[...Array(5)].map((_, i) => {
+                      const normalizedIntensity = normalizeIntensity(item.avaliacao_dificuldade!);
+                      return (
+                        <Ionicons
+                          key={i}
+                          name={i < normalizedIntensity ? 'flash' : 'flash-outline'}
+                          size={14}
+                          color={Colors.primary}
+                        />
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
 
-            <View style={styles.historyStats}>
-              <View style={styles.historyStatItem}>
-                <Ionicons name="time" size={14} color={Colors.textSecondary} />
-                <Text style={styles.historyStatText}>
-                  {formatDuration(item.duracao)}
-                </Text>
-              </View>
-              <View style={styles.historyStatItem}>
-                <Ionicons name="repeat" size={14} color={Colors.textSecondary} />
-                <Text style={styles.historyStatText}>
-                  {item.series_realizadas} séries
-                </Text>
-              </View>
-              {item.calorias_queimadas && (
+              {/* Workout Type and Focus */}
+              <View style={styles.historyWorkoutInfo}>
                 <View style={styles.historyStatItem}>
-                  <Ionicons name="flame" size={14} color={Colors.textSecondary} />
+                  <Ionicons name="fitness" size={14} color={Colors.primary} />
                   <Text style={styles.historyStatText}>
-                    {item.calorias_queimadas} cal
+                    {item.nome_treino || 'Treino Diário'}
+                  </Text>
+                </View>
+                {metadata?.foco && (
+                  <View style={styles.historyStatItem}>
+                    <Ionicons name="body" size={14} color={Colors.textSecondary} />
+                    <Text style={styles.historyStatText}>
+                      {getCategoryLabel(metadata.foco)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Exercises List */}
+              {metadata?.exercicios && metadata.exercicios.length > 0 ? (
+                <View style={styles.historyExercises}>
+                  <Text style={styles.historyExercisesLabel}>Exercícios:</Text>
+                  <Text style={styles.historyExercisesText} numberOfLines={3}>
+                    {metadata.exercicios
+                      .filter((ex: any) => ex && ex.nome) // Filter out null/undefined
+                      .map((ex: any) => ex.nome)
+                      .join(' • ')}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.historyExercises}>
+                  <Text style={styles.historyExercisesLabel}>Exercícios:</Text>
+                  <Text style={[styles.historyExercisesText, { fontStyle: 'italic', color: Colors.textSecondary }]}>
+                    Nenhum exercício registrado
                   </Text>
                 </View>
               )}
-            </View>
-          </Card>
-        ))}
+
+              {/* Stats */}
+              <View style={styles.historyStats}>
+                <View style={styles.historyStatItem}>
+                  <Ionicons name="time" size={14} color={Colors.textSecondary} />
+                  <Text style={styles.historyStatText}>
+                    {formatDuration(item.duracao)}
+                  </Text>
+                </View>
+                <View style={styles.historyStatItem}>
+                  <Ionicons name="repeat" size={14} color={Colors.textSecondary} />
+                  <Text style={styles.historyStatText}>
+                    {item.series_realizadas} séries
+                  </Text>
+                </View>
+                {item.calorias_queimadas && (
+                  <View style={styles.historyStatItem}>
+                    <Ionicons name="flame" size={14} color={Colors.textSecondary} />
+                    <Text style={styles.historyStatText}>
+                      {item.calorias_queimadas} cal
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Card>
+          );
+        })}
       </View>
     );
   };
@@ -839,6 +903,31 @@ const styles = StyleSheet.create({
     fontSize: Typography.bodySmall.fontSize,
     color: Colors.textSecondary,
     marginLeft: Spacing.xs,
+  },
+  historyWorkoutInfo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  historyExercises: {
+    marginBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  historyExercisesLabel: {
+    fontSize: Typography.caption.fontSize,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  historyExercisesText: {
+    fontSize: Typography.bodySmall.fontSize,
+    color: Colors.text,
+    lineHeight: 18,
   },
   emptyCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

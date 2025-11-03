@@ -241,14 +241,19 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
   
   const finishWorkout = useCallback(() => {
     const totalDuration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000 / 60) : 0;
+    const totalCalories = (workout as any)?.totalCalories || exercises.reduce((total, ex) => {
+      return total + (ex.exercise.calorias_estimadas * ex.sets);
+    }, 0);
+    
     navigation.navigate('WorkoutCompleted', {
-      totalExercises: exercises.length,
-      completedExercises: exercises.length,
-      totalDuration: totalDuration,
-      totalCalories: (workout as any)?.totalCalories || 0,
+      workout: {
+        exercises,
+        totalDuration: totalDuration,
+        totalCalories: totalCalories
+      },
       skipSaveHistory: skipSaveHistory || false
     });
-  }, [workoutStartTime, navigation, exercises.length, workout, skipSaveHistory]);
+  }, [workoutStartTime, navigation, exercises.length, workout, skipSaveHistory, exercises]);
   
   const completeExercise = useCallback(() => {
     console.log('=== completeExercise chamado ===');

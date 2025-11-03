@@ -83,6 +83,47 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
         setIsSaving(true);
         // Only save if we have valid data
         if (totalDuration > 0) {
+          // Prepare workout metadata
+          let workoutMetadata: any = {};
+          
+          if (workoutData?.exercises && workoutData.exercises.length > 0) {
+            // Extract exercise names and categories
+            const exercises = workoutData.exercises
+              .filter((ex: any) => ex.exercise) // Filter out any null exercises
+              .map((ex: any) => ({
+                nome: ex.exercise?.nome || 'Exercício desconhecido',
+                categoria: ex.exercise?.categoria || 'completo'
+              }));
+            
+            // Determine workout focus (category)
+            const categories = workoutData.exercises
+              .filter((ex: any) => ex.exercise)
+              .map((ex: any) => ex.exercise?.categoria)
+              .filter((cat: string) => cat && cat !== 'aquecimento' && cat !== 'alongamento');
+            
+            const categoryCounts: { [key: string]: number } = {};
+            categories.forEach((cat: string) => {
+              if (cat) {
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+              }
+            });
+            
+            let workoutFocus = 'completo';
+            const uniqueCategories = Object.keys(categoryCounts);
+            if (uniqueCategories.length === 1) {
+              workoutFocus = uniqueCategories[0];
+            } else if (uniqueCategories.length > 1) {
+              workoutFocus = 'completo';
+            }
+            
+            workoutMetadata = {
+              exercicios: exercises,
+              foco: workoutFocus
+            };
+          }
+          
+          const notasValue = Object.keys(workoutMetadata).length > 0 ? JSON.stringify(workoutMetadata) : undefined;
+          
           await apiService.saveWorkoutHistory({
             nome_treino: 'Treino Diário', // Nome do treino personalizado
             duracao: totalDuration * 60, // Convert minutes to seconds
@@ -91,10 +132,8 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
             calorias_queimadas: totalCalories,
             avaliacao_dificuldade: averageDifficulty, // Add difficulty rating
             satisfacao: 4, // Default satisfaction
+            notas: notasValue
           });
-          console.log('✅ Workout history saved successfully');
-        } else {
-          console.log('⚠️ Skipping save - totalDuration is 0');
         }
       } catch (error) {
         console.error('❌ Error saving workout history:', error);
