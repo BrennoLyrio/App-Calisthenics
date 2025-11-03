@@ -93,6 +93,12 @@ Desenvolvido com as mais modernas tecnologias mobile, garantindo performance, es
 - **Expo Linear Gradient** - Gradientes visuais
 - **AsyncStorage** - Armazenamento local
 - **Axios** - Cliente HTTP
+- **React Native Chart Kit** - Gráficos e visualizações
+- **React Native YouTube Iframe** - Player de vídeos
+- **Expo Video** - Reprodução de vídeos
+- **React Native Vector Icons** - Biblioteca de ícones
+- **React Native Toast Message** - Notificações
+- **React Native WebView** - Visualização de conteúdo web
 
 
 
@@ -132,10 +138,17 @@ npm run web
   - POST `/auth/login` - Login
   - GET `/auth/profile` - Perfil do usuário
   - PUT `/auth/profile` - Atualizar perfil
+  - GET `/exercises` - Listar exercícios
+  - GET `/exercises/:id` - Detalhes do exercício
+  - GET `/workouts/recommended` - Treinos recomendados
+  - GET `/workouts/:id` - Detalhes do treino
+  - GET `/workouts/history/stats` - Estatísticas de treinos
+  - GET `/workouts/history` - Histórico de treinos
+  - POST `/workouts/history` - Salvar treino no histórico
 
 
 
-## 🎯 Funcionalidades RF-001 e RF-002
+## 🎯 Funcionalidades Implementadas
 
 ### RF-001: Gestão de Perfil ✅
 - ✅ Criação de perfil individual
@@ -149,6 +162,70 @@ npm run web
 - ✅ Categorização de exercícios
 - ✅ Base para planos de treino
 - ✅ Sistema de dificuldade
+
+### RF-003: Vídeos Demonstrativos ✅
+- ✅ Player de YouTube integrado
+- ✅ Vídeos para cada exercício
+- ✅ Controles de reprodução
+- ✅ Interface intuitiva
+
+### RF-004: Explicações Textuais Detalhadas ✅
+- ✅ Instruções completas de execução
+- ✅ Dicas de postura e respiração
+- ✅ Informações sobre músculos trabalhados
+- ✅ Descrições detalhadas por exercício
+
+### RF-005: Biblioteca de Exercícios ✅
+- ✅ Filtros por categoria (superiores, inferiores, core)
+- ✅ Filtros por dificuldade (iniciante, intermediário, avançado)
+- ✅ Busca por nome
+- ✅ Visualização detalhada de cada exercício
+- ✅ Interface organizada e intuitiva
+
+### RF-007: Histórico de Treinos ✅
+- ✅ Registro automático de treinos
+- ✅ Estatísticas gerais (total de treinos, calorias, tempo)
+- ✅ Gráficos de progresso
+  - Progresso semanal (últimas 8 semanas)
+  - Treinos por dia da semana
+  - Histórico recente de treinos
+- ✅ Detalhes completos de cada treino
+  - Tipo e foco do treino
+  - Lista de exercícios realizados
+  - Duração, séries e calorias
+  - Intensidade
+  - Data e hora
+
+### RF-012: Aquecimento e Alongamento ✅
+- ✅ Módulo de aquecimento dedicado
+- ✅ Módulo de alongamento dedicado
+- ✅ Exercícios específicos para cada categoria
+- ✅ Interface intuitiva com explicações
+- ✅ Treinamento rápido sem rest time
+- ✅ Não contabiliza como treino regular
+
+### RF-016: Interface Intuitiva ✅
+- ✅ Navegação por tabs
+- ✅ Design moderno e responsivo
+- ✅ Gradientes e animações
+- ✅ Ícones intuitivos
+- ✅ Feedback visual
+- ✅ Mensagens de erro e sucesso
+
+## 📊 Próximas Funcionalidades (Sprint 3)
+
+- 🔲 RF-006: Geração de Treinos Automáticos
+- 🔲 RF-008: Gráficos e Relatórios Avançados
+- 🔲 RF-009: Notificações Inteligentes
+- 🔲 RF-010: Metas Pessoais
+- 🔲 RF-011: Desafios e Programas Temáticos
+- 🔲 RF-013: Recomendações de Recuperação
+- 🔲 RF-014: Comunidade Interna
+- 🔲 RF-015: Funcionamento Offline
+- 🔲 RF-017: Rotinas Personalizadas
+- 🔲 RF-018: Integração com Wearables
+- 🔲 RF-019: Adaptações Personalizadas
+- 🔲 RF-020: Conteúdo Educativo Expandido
 
 ## 📞 Suporte
 
