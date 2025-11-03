@@ -19,6 +19,7 @@ const sequelize = new Sequelize({
   username: DB_USER || 'postgres',
   password: DB_PASSWORD || 'password',
   dialect: 'postgres',
+  timezone: '-03:00', // UTC-3 para Brasília
   logging: NODE_ENV === 'development' ? console.log : false,
   pool: {
     max: 10,

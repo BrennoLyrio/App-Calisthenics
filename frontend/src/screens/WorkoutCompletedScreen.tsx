@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card } from '../components';
+import { apiService } from '../services/api';
 import { Colors, Typography, Spacing, BorderRadius } from '../constants';
 
 const { width, height } = Dimensions.get('window');
@@ -21,10 +22,16 @@ interface WorkoutCompletedScreenProps {
   navigation: any;
   route: {
     params: {
-      totalExercises: number;
-      completedExercises: number;
+      totalExercises?: number;
+      completedExercises?: number;
       totalDuration: number;
       totalCalories: number;
+      workout?: {
+        exercises: any[];
+        totalDuration: number;
+        totalCalories: number;
+      };
+      skipSaveHistory?: boolean;
     };
   };
 }
@@ -33,7 +40,72 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
   navigation, 
   route 
 }) => {
-  const { totalExercises, completedExercises, totalDuration, totalCalories } = route.params;
+  // Handle both navigation patterns
+  const workoutData = route.params.workout;
+  const totalExercises = route.params.totalExercises || workoutData?.exercises?.length || 0;
+  const completedExercises = route.params.completedExercises || totalExercises;
+  const totalDuration = route.params.totalDuration || workoutData?.totalDuration || 0;
+  const totalCalories = route.params.totalCalories || workoutData?.totalCalories || 0;
+  const skipSaveHistory = route.params.skipSaveHistory || false;
+  
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Calculate average difficulty from workout exercises
+  const calculateAverageDifficulty = () => {
+    if (!workoutData?.exercises || workoutData.exercises.length === 0) return 5; // Default medium difficulty
+    
+    const difficultyMap: { [key: string]: number } = {
+      'iniciante': 3,
+      'intermediario': 6,
+      'avancado': 9
+    };
+    
+    const sum = workoutData.exercises.reduce((total: number, ex: any) => {
+      const difficulty = difficultyMap[ex.exercise?.nivel_dificuldade] || 5;
+      return total + difficulty;
+    }, 0);
+    
+    return Math.round(sum / workoutData.exercises.length);
+  };
+
+  const averageDifficulty = useMemo(() => calculateAverageDifficulty(), [workoutData]);
+
+  // Save workout history automatically when screen loads (skip if skipSaveHistory is true)
+  useEffect(() => {
+    const saveWorkoutHistory = async () => {
+      // Skip saving if flag is set
+      if (skipSaveHistory) {
+        console.log('⚠️ Skipping save - skipSaveHistory is true (warmup/cooldown session)');
+        return;
+      }
+
+      try {
+        setIsSaving(true);
+        // Only save if we have valid data
+        if (totalDuration > 0) {
+          await apiService.saveWorkoutHistory({
+            nome_treino: 'Treino Diário', // Nome do treino personalizado
+            duracao: totalDuration * 60, // Convert minutes to seconds
+            series_realizadas: completedExercises * 3, // Assuming 3 sets per exercise
+            repeticoes_realizadas: completedExercises * 10, // Estimated reps
+            calorias_queimadas: totalCalories,
+            avaliacao_dificuldade: averageDifficulty, // Add difficulty rating
+            satisfacao: 4, // Default satisfaction
+          });
+          console.log('✅ Workout history saved successfully');
+        } else {
+          console.log('⚠️ Skipping save - totalDuration is 0');
+        }
+      } catch (error) {
+        console.error('❌ Error saving workout history:', error);
+        // Don't show error to user, just log it
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    saveWorkoutHistory();
+  }, [totalDuration, averageDifficulty, skipSaveHistory]);
 
   // Mensagem motivacional fixa (calculada apenas uma vez)
   const motivationalMessage = useMemo(() => {

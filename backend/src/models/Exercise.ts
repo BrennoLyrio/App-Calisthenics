@@ -11,7 +11,7 @@ export const EXERCISE_TYPES = {
 interface ExerciseAttributes {
   id: number;
   nome: string;
-  categoria: 'superiores' | 'inferiores' | 'core' | 'completo';
+  categoria: 'superiores' | 'inferiores' | 'core' | 'completo' | 'aquecimento' | 'alongamento';
   tipo: ExerciseType; // 'timer' ou 'reps'
   descricao_textual: string;
   nivel_dificuldade: 'iniciante' | 'intermediario' | 'avancado';
@@ -35,7 +35,7 @@ interface ExerciseCreationAttributes extends Optional<ExerciseAttributes, 'id' |
 class Exercise extends Model<ExerciseAttributes, ExerciseCreationAttributes> implements ExerciseAttributes {
   public id!: number;
   public nome!: string;
-  public categoria!: 'superiores' | 'inferiores' | 'core' | 'completo';
+  public categoria!: 'superiores' | 'inferiores' | 'core' | 'completo' | 'aquecimento' | 'alongamento';
   public descricao_textual!: string;
   public nivel_dificuldade!: 'iniciante' | 'intermediario' | 'avancado';
   public musculos_trabalhados!: string[];
@@ -72,6 +72,9 @@ class Exercise extends Model<ExerciseAttributes, ExerciseCreationAttributes> imp
     return Exercise.findAll({
       where: {
         ativo: true,
+        categoria: {
+          [Op.notIn]: ['aquecimento', 'alongamento']
+        },
         [Op.or]: [
           { nome: { [Op.iLike]: `%${searchTerm}%` } },
           { descricao_textual: { [Op.iLike]: `%${searchTerm}%` } },
@@ -99,7 +102,7 @@ Exercise.init(
       },
     },
     categoria: {
-      type: DataTypes.ENUM('superiores', 'inferiores', 'core', 'completo'),
+      type: DataTypes.ENUM('superiores', 'inferiores', 'core', 'completo', 'aquecimento', 'alongamento'),
       allowNull: false,
     },
     descricao_textual: {

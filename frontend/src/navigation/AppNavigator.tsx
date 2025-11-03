@@ -13,6 +13,10 @@ import {
   OnboardingPhysicalScreen,
   MainScreen,
   ExercisesScreen,
+  LibraryExercisesScreen,
+  WarmupScreen,
+  CooldownScreen,
+  ProgressScreen,
   ExercisePreviewScreen,
   WorkoutSessionScreen,
   WorkoutCompletedScreen,
@@ -56,6 +60,10 @@ export const AppNavigator: React.FC = () => {
           <>
             <Stack.Screen name="Main" component={MainScreen} />
             <Stack.Screen name="Exercises" component={ExercisesScreen} />
+            <Stack.Screen name="LibraryExercises" component={LibraryExercisesScreen} />
+            <Stack.Screen name="Warmup" component={WarmupScreen} />
+            <Stack.Screen name="Cooldown" component={CooldownScreen} />
+            <Stack.Screen name="Progress" component={ProgressScreen} />
             <Stack.Screen name="ExercisePreview" component={ExercisePreviewScreen} />
             <Stack.Screen name="WorkoutSession" component={WorkoutSessionScreen} />
             <Stack.Screen name="WorkoutCompleted" component={WorkoutCompletedScreen} />

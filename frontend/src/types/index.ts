@@ -44,7 +44,7 @@ export type ExerciseType = 'timer' | 'reps';
 export interface Exercise {
   id: number;
   nome: string;
-  categoria: 'superiores' | 'inferiores' | 'core' | 'completo';
+  categoria: 'superiores' | 'inferiores' | 'core' | 'completo' | 'aquecimento' | 'alongamento';
   tipo: ExerciseType;
   descricao_textual: string;
   nivel_dificuldade: 'iniciante' | 'intermediario' | 'avancado';
@@ -101,7 +101,8 @@ export interface WorkoutExercise {
 export interface WorkoutHistory {
   id: number;
   id_usuario: number;
-  id_treino: number;
+  id_treino?: number;
+  nome_treino?: string;
   data_execucao: string;
   duracao: number;
   series_realizadas: number;
@@ -116,7 +117,8 @@ export interface WorkoutHistory {
 }
 
 export interface SaveWorkoutHistoryRequest {
-  id_treino: number;
+  id_treino?: number;
+  nome_treino?: string;
   duracao: number;
   series_realizadas: number;
   repeticoes_realizadas: number;
@@ -131,6 +133,7 @@ export interface WorkoutStats {
   generalStats: {
     total_workouts?: number;
     avg_duration?: number;
+    total_duration?: number;
     total_calories?: number;
     avg_difficulty?: number;
     avg_satisfaction?: number;
@@ -196,6 +199,10 @@ export type RootStackParamList = {
   Profile: undefined;
   Workouts: undefined;
   Exercises: undefined;
+  LibraryExercises: undefined;
+  Warmup: undefined;
+  Cooldown: undefined;
+  Progress: undefined;
   ExercisePreview: {
     exercise: Exercise;
     duration?: number;
@@ -220,17 +227,23 @@ export type RootStackParamList = {
     duration?: number;
     reps?: number;
     restTime?: number;
+    skipSaveHistory?: boolean;
   };
   WorkoutCompleted: {
-    totalExercises: number;
-    completedExercises: number;
+    totalExercises?: number;
+    completedExercises?: number;
     totalDuration: number;
     totalCalories: number;
-    totalSets: number;
-    completedSets: number;
-    sessionDurationSeconds: number;
+    totalSets?: number;
+    completedSets?: number;
+    sessionDurationSeconds?: number;
+    workout?: {
+      exercises: WorkoutExerciseDetail[];
+      totalDuration: number;
+      totalCalories: number;
   };
-  Progress: undefined;
+    skipSaveHistory?: boolean;
+  };
 };
 
 // Onboarding Types

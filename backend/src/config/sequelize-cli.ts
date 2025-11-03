@@ -17,6 +17,7 @@ export = {
     host,
     port,
     dialect: 'postgres',
+    timezone: '-03:00',
     seederStorage: 'sequelize',
     logging: false,
   },
@@ -27,6 +28,7 @@ export = {
     host,
     port,
     dialect: 'postgres',
+    timezone: '-03:00',
     logging: false,
   },
   production: {
@@ -36,6 +38,7 @@ export = {
     host,
     port,
     dialect: 'postgres',
+    timezone: '-03:00',
     logging: false,
   },
 };

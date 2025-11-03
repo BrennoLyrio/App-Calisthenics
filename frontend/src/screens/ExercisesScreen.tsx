@@ -9,6 +9,7 @@ import {
   StatusBar,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -160,6 +161,7 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={styles.loadingText}>Preparando seu treino...</Text>
       </View>
     );
@@ -252,6 +254,25 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
               </Card>
             )}
 
+            {/* Warmup & Cooldown Buttons */}
+            <View style={styles.warmupCooldownContainer}>
+              <TouchableOpacity
+                style={styles.warmupCooldownButton}
+                onPress={() => navigation.navigate('Warmup')}
+              >
+                <Ionicons name="flame-outline" size={24} color={Colors.primary} />
+                <Text style={styles.warmupCooldownText}>Aquecimento</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.warmupCooldownButton}
+                onPress={() => navigation.navigate('Cooldown')}
+              >
+                <Ionicons name="leaf-outline" size={24} color={Colors.primary} />
+                <Text style={styles.warmupCooldownText}>Alongamento</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Exercises List */}
             <View style={styles.exercisesSection}>
               <Text style={styles.sectionTitle}>Exercícios Recomendados</Text>
@@ -279,7 +300,6 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
                 size="large"
                 gradient
                 style={styles.startWorkoutButton}
-                leftIcon="play"
               />
             )}
           </ScrollView>
@@ -316,8 +336,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   loadingText: {
-    fontSize: Typography.h3.fontSize,
+    fontSize: Typography.h4.fontSize,
     color: Colors.text,
+    marginTop: Spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -409,6 +430,28 @@ const styles = StyleSheet.create({
   },
   startWorkoutButton: {
     marginBottom: Spacing.xl,
+  },
+  warmupCooldownContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  warmupCooldownButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  warmupCooldownText: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: '600',
+    color: Colors.text,
+    marginLeft: Spacing.sm,
   },
 });
 

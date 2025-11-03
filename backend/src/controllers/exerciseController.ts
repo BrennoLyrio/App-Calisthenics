@@ -1,15 +1,22 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import Exercise from '../models/Exercise';
 import { ApiResponse } from '../types';
 
 export const getAllExercises = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { categoria, nivel, search, page = 1, limit = 20 } = req.query;
+    const { categoria, nivel, search, page = 1, limit } = req.query;
     
     let whereClause: any = { ativo: true };
     
+    // Handle category filter
     if (categoria) {
       whereClause.categoria = categoria;
+    } else {
+      // Exclude warmup and cooldown exercises unless specifically requested
+      whereClause.categoria = {
+        [Op.notIn]: ['aquecimento', 'alongamento']
+      };
     }
     
     if (nivel) {
@@ -21,24 +28,30 @@ export const getAllExercises = async (req: Request, res: Response): Promise<void
     if (search) {
       exercises = await Exercise.searchExercises(search as string);
     } else {
-      exercises = await Exercise.findAll({
+      const queryOptions: any = {
         where: whereClause,
-        order: [['nome', 'ASC']],
-        limit: Number(limit),
-        offset: (Number(page) - 1) * Number(limit)
-      });
+        order: [['nome', 'ASC']]
+      };
+      
+      // Only apply limit if specified
+      if (limit) {
+        queryOptions.limit = Number(limit);
+        queryOptions.offset = (Number(page) - 1) * Number(limit);
+      }
+      
+      exercises = await Exercise.findAll(queryOptions);
     }
 
     const response: ApiResponse = {
       success: true,
       message: 'Exercícios recuperados com sucesso',
       data: exercises,
-      pagination: {
+      pagination: limit ? {
         page: Number(page),
         limit: Number(limit),
         total: exercises.length,
         totalPages: Math.ceil(exercises.length / Number(limit))
-      }
+      } : undefined
     };
 
     res.json(response);

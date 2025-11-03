@@ -5,7 +5,8 @@ import { ApiResponse } from '../types';
 import { Op } from 'sequelize';
 
 interface SaveWorkoutHistoryRequest {
-  id_treino: number;
+  id_treino?: number;
+  nome_treino?: string;
   duracao: number;
   series_realizadas: number;
   repeticoes_realizadas: number;
@@ -24,6 +25,7 @@ export const saveWorkoutHistory = async (req: AuthenticatedRequest, res: Respons
     const workoutHistory = await WorkoutHistory.create({
       id_usuario: user.id,
       id_treino: historyData.id_treino,
+      nome_treino: historyData.nome_treino,
       data_execucao: new Date(),
       duracao: historyData.duracao,
       series_realizadas: historyData.series_realizadas,

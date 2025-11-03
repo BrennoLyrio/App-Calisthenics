@@ -34,11 +34,14 @@ interface WorkoutSessionScreenProps {
           sets: number;
           restTime: number;
         }>;
+        totalDuration?: number;
+        totalCalories?: number;
       };
       exercise?: Exercise;
       duration?: number;
       reps?: number;
       restTime?: number;
+      skipSaveHistory?: boolean;
     };
   };
 }
@@ -47,7 +50,7 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
   navigation, 
   route 
 }) => {
-  const { workout, exercise, duration, reps, restTime } = route.params;
+  const { workout, exercise, duration, reps, restTime, skipSaveHistory } = route.params;
   
   // Estado para controle do treino
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -79,7 +82,7 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
   
   const currentWorkoutExercise = exercises[currentExerciseIndex];
   const isLastExercise = currentExerciseIndex === exercises.length - 1;
-  const isLastSet = currentSet === 3; // Sempre 3 séries
+  const isLastSet = currentSet === currentWorkoutExercise?.sets; // Use actual sets count
   const isLastSetOfLastExercise = isLastExercise && isLastSet;
   
   // Determinar tipo de exercício baseado no campo 'tipo' do exercício
@@ -157,15 +160,15 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
       // Inicia um novo timer
       timerRef.current = setInterval(() => {
         if ((isTimerExercise || isResting) && timeLeft > 0) {
-          setTimeLeft(prev => {
+        setTimeLeft(prev => {
             if (prev <= 1) {
-              setTimerFinished(true);
-              setIsExerciseActive(false);
+            setTimerFinished(true);
+            setIsExerciseActive(false);
               Vibration.vibrate([0, 500, 200, 500]);
-              return 0;
-            }
-            return prev - 1;
-          });
+            return 0;
+          }
+          return prev - 1;
+        });
         }
       }, 1000);
     } else {
@@ -236,6 +239,17 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
     // O timer será retomado pelo useEffect que monitora isPaused
   }, []);
   
+  const finishWorkout = useCallback(() => {
+    const totalDuration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000 / 60) : 0;
+    navigation.navigate('WorkoutCompleted', {
+      totalExercises: exercises.length,
+      completedExercises: exercises.length,
+      totalDuration: totalDuration,
+      totalCalories: (workout as any)?.totalCalories || 0,
+      skipSaveHistory: skipSaveHistory || false
+    });
+  }, [workoutStartTime, navigation, exercises.length, workout, skipSaveHistory]);
+  
   const completeExercise = useCallback(() => {
     console.log('=== completeExercise chamado ===');
     console.log('Estado atual:', { 
@@ -283,13 +297,33 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
         console.log('Última série do último exercício - finalizando sem descanso');
         // Última série do último exercício - NÃO vai para descanso, vai direto para conclusão
         finishWorkout();
+      } else if (currentWorkoutExercise?.restTime === 0) {
+        // Pular descanso se restTime é 0 (warmup/cooldown)
+        console.log('Pulando descanso - restTime é 0');
+        setIsResting(false);
+        setIsExerciseActive(false);
+        setTimerFinished(false);
+        setElapsedTime(0);
+      
+      if (isLastSet) {
+          // Próximo exercício
+        if (isLastExercise) {
+            finishWorkout();
+          } else {
+            setCurrentExerciseIndex(prev => prev + 1);
+            setCurrentSet(1);
+          }
+        } else {
+          // Próxima série do mesmo exercício
+          setCurrentSet(prev => prev + 1);
+        }
       } else {
         console.log('Iniciando descanso...');
         // Ir para descanso antes da próxima série ou exercício
         startRest();
       }
     }
-  }, [isResting, isLastSet, isLastExercise, completedExercises, exercises.length, workout, navigation, startRest, workoutStartTime]);
+  }, [isResting, isLastSet, isLastExercise, completedExercises, exercises.length, workout, navigation, startRest, workoutStartTime, currentWorkoutExercise, finishWorkout]);
   
   const skipExercise = useCallback(() => {
     // Pular para o próximo exercício sem contar como concluído
@@ -302,33 +336,25 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
       setTimerFinished(false);
     } else {
       // Último exercício, finalizar treino
+      const totalDuration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000 / 60) : 0;
       navigation.navigate('WorkoutCompleted', {
         workout: {
           exercises,
-          totalDuration: Math.round(elapsedTime / 60), // em minutos
+          totalDuration: totalDuration,
           totalCalories: exercises.reduce((total, ex) => {
             return total + (ex.exercise.calorias_estimadas * ex.sets);
           }, 0)
-        }
+        },
+        skipSaveHistory: skipSaveHistory || false
       });
     }
-  }, [currentExerciseIndex, exercises, navigation, elapsedTime]);
+  }, [currentExerciseIndex, exercises, navigation, workoutStartTime, skipSaveHistory]);
 
   const skipRest = useCallback(() => {
     setTimeLeft(0);
     setTimerFinished(true);
     setIsResting(false);
   }, []);
-
-  const finishWorkout = useCallback(() => {
-    const totalDuration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000 / 60) : 0;
-    navigation.navigate('WorkoutCompleted', {
-      totalExercises: exercises.length,
-      completedExercises: exercises.length,
-      totalDuration: totalDuration,
-      totalCalories: (workout as any)?.totalCalories || 0,
-    });
-  }, [workoutStartTime, navigation, exercises.length, workout]);
   
   const goToNextSet = useCallback(() => {
     console.log('=== goToNextSet chamado ===');
@@ -519,8 +545,8 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
                 {isRepsExercise && (
                   <Text style={styles.repsInfo}>
                     {currentWorkoutExercise.reps} repetições
-                  </Text>
-                )}
+                </Text>
+              )}
               </View>
 
               {/* Timer or Reps Display */}
@@ -573,8 +599,8 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
                 {isTimerExercise && !isResting && (
                   <View style={styles.buttonContainer}>
                     {!isExerciseActive ? (
-                      <Button
-                        title="Iniciar"
+                  <Button
+                    title="Iniciar"
                         onPress={startExercise}
                         size="large"
                         style={styles.fullWidthButton}
@@ -597,12 +623,12 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
                     {!isExerciseActive ? (
                       <Button
                         title="Iniciar Exercício"
-                        onPress={startExercise}
-                        size="large"
-                        gradient
+                    onPress={startExercise}
+                    size="large"
+                    gradient
                         style={styles.fullWidthButton}
-                      />
-                    ) : (
+                  />
+                ) : (
                       <View style={styles.repsActionButtons}>
                         <Button
                           title="Concluir Série"
@@ -681,7 +707,7 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
                       name={isLastSetOfLastExercise ? "checkmark-circle" : "chevron-forward"} 
                       size={20} 
                       color={Colors.primary} 
-                    />
+                  />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -864,7 +890,7 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 'bold',
     color: Colors.primary,
-    marginTop: Spacing.sm, 
+    marginTop: Spacing.sm,
   },
   timerLabel: {
     fontSize: Typography.body.fontSize,

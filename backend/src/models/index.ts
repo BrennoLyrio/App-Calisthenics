@@ -85,7 +85,11 @@ UserProgram.belongsTo(ThematicProgram, {
 const syncDatabase = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
+    
+    // Set timezone for PostgreSQL to Brazil (UTC-3)
+    await sequelize.query("SET timezone = 'America/Sao_Paulo';");
     console.log('Database connection established successfully.');
+    console.log('Timezone set to America/Sao_Paulo (UTC-3)');
     
     // Sync all models
     await sequelize.sync({ alter: true });

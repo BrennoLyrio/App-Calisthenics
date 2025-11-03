@@ -83,6 +83,17 @@ export const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('LibraryExercises')}
+                >
+                  <Ionicons name="library" size={32} color={Colors.primary} />
+                  <Text style={styles.actionTitle}>Biblioteca</Text>
+                  <Text style={styles.actionDescription}>
+                    Todos os exercícios
+                  </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.actionCard}>
                   <Ionicons name="play-circle" size={32} color={Colors.primary} />
                   <Text style={styles.actionTitle}>Treinos</Text>
@@ -91,7 +102,10 @@ export const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionCard}>
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('Progress')}
+                >
                   <Ionicons name="stats-chart" size={32} color={Colors.primary} />
                   <Text style={styles.actionTitle}>Progresso</Text>
                   <Text style={styles.actionDescription}>

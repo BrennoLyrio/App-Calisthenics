@@ -4,7 +4,8 @@ import sequelize from '../config/database';
 interface WorkoutHistoryAttributes {
   id: number;
   id_usuario: number;
-  id_treino: number;
+  id_treino?: number;
+  nome_treino?: string;
   data_execucao: Date;
   duracao: number;
   series_realizadas: number;
@@ -18,12 +19,13 @@ interface WorkoutHistoryAttributes {
   updatedAt?: Date;
 }
 
-interface WorkoutHistoryCreationAttributes extends Optional<WorkoutHistoryAttributes, 'id' | 'notas' | 'avaliacao_dificuldade' | 'calorias_queimadas' | 'batimentos_medio' | 'satisfacao' | 'createdAt' | 'updatedAt'> {}
+interface WorkoutHistoryCreationAttributes extends Optional<WorkoutHistoryAttributes, 'id' | 'id_treino' | 'nome_treino' | 'notas' | 'avaliacao_dificuldade' | 'calorias_queimadas' | 'batimentos_medio' | 'satisfacao' | 'createdAt' | 'updatedAt'> {}
 
 class WorkoutHistory extends Model<WorkoutHistoryAttributes, WorkoutHistoryCreationAttributes> implements WorkoutHistoryAttributes {
   public id!: number;
   public id_usuario!: number;
-  public id_treino!: number;
+  public id_treino?: number;
+  public nome_treino?: string;
   public data_execucao!: Date;
   public duracao!: number;
   public series_realizadas!: number;
@@ -65,8 +67,9 @@ class WorkoutHistory extends Model<WorkoutHistoryAttributes, WorkoutHistoryCreat
       },
       attributes: [
         [sequelize.fn('COUNT', sequelize.col('id')), 'total_workouts'],
+      [sequelize.fn('COALESCE', sequelize.fn('SUM', sequelize.col('duracao')), 0), 'total_duration'],
         [sequelize.fn('AVG', sequelize.col('duracao')), 'avg_duration'],
-        [sequelize.fn('SUM', sequelize.col('calorias_queimadas')), 'total_calories'],
+      [sequelize.fn('COALESCE', sequelize.fn('SUM', sequelize.col('calorias_queimadas')), 0), 'total_calories'],
         [sequelize.fn('AVG', sequelize.col('avaliacao_dificuldade')), 'avg_difficulty'],
         [sequelize.fn('AVG', sequelize.col('satisfacao')), 'avg_satisfaction']
       ],
@@ -117,11 +120,15 @@ WorkoutHistory.init(
     },
     id_treino: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'treinos',
         key: 'id',
       },
+    },
+    nome_treino: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
     },
     data_execucao: {
       type: DataTypes.DATE,
@@ -133,7 +140,7 @@ WorkoutHistory.init(
       allowNull: false,
       validate: {
         min: 1,
-        max: 7200, // 2 hours max
+        max: 10800, // 3 hours max (allow for longer workouts)
       },
     },
     series_realizadas: {

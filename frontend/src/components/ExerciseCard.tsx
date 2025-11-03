@@ -71,6 +71,10 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         return 'body';
       case 'completo':
         return 'flash';
+      case 'aquecimento':
+        return 'flame';
+      case 'alongamento':
+        return 'leaf';
       default:
         return 'fitness';
     }
@@ -78,32 +82,18 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
-      <View style={styles.imageContainer}>
-        {exercise.imagem_url ? (
-          <Image source={{ uri: exercise.imagem_url }} style={styles.image} />
-        ) : (
-          <View style={styles.placeholderImage}>
-            <Ionicons 
-              name={getCategoryIcon(exercise.categoria)} 
-              size={40} 
-              color={Colors.textSecondary} 
-            />
-          </View>
-        )}
-        
-        {showDifficulty && (
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={2}>
+          {exercise.nome}
+        </Text>
+
+        {/* {showDifficulty && (
           <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(exercise.nivel_dificuldade) }]}>
             <Text style={styles.difficultyText}>
               {getDifficultyLabel(exercise.nivel_dificuldade)}
             </Text>
           </View>
-        )}
-      </View>
-
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
-          {exercise.nome}
-        </Text>
+        )} */}
         
         <Text style={styles.description} numberOfLines={2}>
           {exercise.descricao_textual}
@@ -124,19 +114,19 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
         {(showDuration || showReps) && (
           <View style={styles.exerciseInfo}>
-            {showDuration && duration && (
+            {showDuration && duration !== undefined && duration !== null && duration > 0 && (
               <View style={styles.infoItem}>
                 <Ionicons name="time" size={16} color={Colors.textSecondary} />
                 <Text style={styles.infoText}>{duration}s</Text>
               </View>
             )}
-            {showReps && reps && (
+            {showReps && reps !== undefined && reps !== null && reps > 0 && (
               <View style={styles.infoItem}>
                 <Ionicons name="repeat" size={16} color={Colors.textSecondary} />
                 <Text style={styles.infoText}>{reps} reps</Text>
               </View>
             )}
-            {restTime && (
+            {restTime && restTime > 0 && (
               <View style={styles.infoItem}>
                 <Ionicons name="pause" size={16} color={Colors.textSecondary} />
                 <Text style={styles.infoText}>Descanso {restTime}s</Text>
