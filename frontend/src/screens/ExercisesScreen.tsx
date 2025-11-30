@@ -14,7 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { ExerciseCard, Button, Card } from '../components';
+import { ExerciseCard, Button, Card, AlternativesModal } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Colors, Typography, Spacing, BorderRadius } from '../constants';
@@ -43,6 +43,8 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
   const [dailyWorkout, setDailyWorkout] = useState<DailyWorkout | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [alternativesModalVisible, setAlternativesModalVisible] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
   const generateDailyWorkout = async () => {
     try {
@@ -132,6 +134,45 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
       exercise,
       isFromWorkout: false 
     });
+  };
+
+  const handleShowAlternatives = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setAlternativesModalVisible(true);
+  };
+
+  const handleSelectAlternative = (alternative: Exercise) => {
+    if (!dailyWorkout || !selectedExercise) return;
+
+    // Substituir o exercício pela alternativa mantendo as mesmas configurações
+    const updatedExercises = dailyWorkout.exercises.map((workoutExercise) => {
+      if (workoutExercise.exercise.id === selectedExercise.id) {
+        return {
+          ...workoutExercise,
+          exercise: alternative,
+        };
+      }
+      return workoutExercise;
+    });
+
+    // Recalcular totais
+    const totalDuration = updatedExercises.reduce((total, item) => {
+      const exerciseTime = (item.duration || 0) * item.sets;
+      const restTime = item.restTime * (item.sets - 1);
+      return total + exerciseTime + restTime;
+    }, 0);
+
+    const totalCalories = updatedExercises.reduce((total, item) => {
+      return total + (item.exercise.calorias_estimadas * item.sets);
+    }, 0);
+
+    setDailyWorkout({
+      exercises: updatedExercises,
+      totalDuration: Math.round(totalDuration / 60),
+      totalCalories: Math.round(totalCalories),
+    });
+
+    setSelectedExercise(null);
   };
 
   const handleStartWorkout = () => {
@@ -278,17 +319,26 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
               <Text style={styles.sectionTitle}>Exercícios Recomendados</Text>
               
               {dailyWorkout?.exercises.map((workoutExercise, index) => (
-                <ExerciseCard
-                  key={workoutExercise.exercise.id}
-                  exercise={workoutExercise.exercise}
-                  onPress={() => handleExercisePress(workoutExercise.exercise)}
-                  showDifficulty={true}
-                  showDuration={true}
-                  showReps={true}
-                  duration={workoutExercise.duration}
-                  reps={workoutExercise.reps}
-                  restTime={workoutExercise.restTime}
-                />
+                <View key={`workout-exercise-${index}`} style={styles.exerciseWrapper}>
+                  <ExerciseCard
+                    exercise={workoutExercise.exercise}
+                    onPress={() => handleExercisePress(workoutExercise.exercise)}
+                    showDifficulty={true}
+                    showDuration={true}
+                    showReps={true}
+                    duration={workoutExercise.duration}
+                    reps={workoutExercise.reps}
+                    restTime={workoutExercise.restTime}
+                  />
+                  <TouchableOpacity
+                    style={styles.alternativesButton}
+                    onPress={() => handleShowAlternatives(workoutExercise.exercise)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="swap-horizontal-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.alternativesButtonText}>Ver alternativas</Text>
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
 
@@ -305,6 +355,17 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({ navigation }) 
           </ScrollView>
         </SafeAreaView>
       </ImageBackground>
+
+      {/* Alternatives Modal */}
+      <AlternativesModal
+        visible={alternativesModalVisible}
+        exercise={selectedExercise}
+        onClose={() => {
+          setAlternativesModalVisible(false);
+          setSelectedExercise(null);
+        }}
+        onSelectAlternative={handleSelectAlternative}
+      />
     </View>
   );
 };
@@ -429,7 +490,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   startWorkoutButton: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   warmupCooldownContainer: {
     flexDirection: 'row',
@@ -452,6 +513,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.text,
     marginLeft: Spacing.sm,
+  },
+  exerciseWrapper: {
+    marginBottom: Spacing.md,
+  },
+  alternativesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  alternativesButtonText: {
+    ...Typography.caption,
+    color: Colors.primary,
+    fontWeight: '600',
   },
 });
 

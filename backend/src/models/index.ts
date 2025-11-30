@@ -7,6 +7,12 @@ import WorkoutHistory from './WorkoutHistory';
 import Goal from './Goal';
 import ThematicProgram from './ThematicProgram';
 import UserProgram from './UserProgram';
+import CustomWorkout from './CustomWorkout';
+import CustomWorkoutExercise from './CustomWorkoutExercise';
+import WeeklyChallenge from './WeeklyChallenge';
+import CommunityPost from './CommunityPost';
+import PostLike from './PostLike';
+import PostComment from './PostComment';
 
 // Define associations
 User.hasMany(Workout, { 
@@ -81,6 +87,89 @@ UserProgram.belongsTo(ThematicProgram, {
   as: 'program' 
 });
 
+// Custom Workout associations
+User.hasMany(CustomWorkout, { 
+  foreignKey: 'id_usuario', 
+  as: 'customWorkouts' 
+});
+CustomWorkout.belongsTo(User, { 
+  foreignKey: 'id_usuario', 
+  as: 'user' 
+});
+
+CustomWorkout.hasMany(CustomWorkoutExercise, { 
+  foreignKey: 'id_rotina', 
+  as: 'exercises' 
+});
+CustomWorkoutExercise.belongsTo(CustomWorkout, { 
+  foreignKey: 'id_rotina', 
+  as: 'customWorkout' 
+});
+
+Exercise.hasMany(CustomWorkoutExercise, { 
+  foreignKey: 'id_exercicio', 
+  as: 'customWorkoutExercises' 
+});
+CustomWorkoutExercise.belongsTo(Exercise, { 
+  foreignKey: 'id_exercicio', 
+  as: 'exercise' 
+});
+
+// Community associations
+User.hasMany(CommunityPost, { 
+  foreignKey: 'id_usuario', 
+  as: 'communityPosts' 
+});
+CommunityPost.belongsTo(User, { 
+  foreignKey: 'id_usuario', 
+  as: 'user' 
+});
+
+WeeklyChallenge.hasMany(CommunityPost, { 
+  foreignKey: 'id_desafio_semanal', 
+  as: 'posts' 
+});
+CommunityPost.belongsTo(WeeklyChallenge, { 
+  foreignKey: 'id_desafio_semanal', 
+  as: 'weeklyChallenge' 
+});
+
+CommunityPost.hasMany(PostLike, { 
+  foreignKey: 'id_post', 
+  as: 'likes' 
+});
+PostLike.belongsTo(CommunityPost, { 
+  foreignKey: 'id_post', 
+  as: 'post' 
+});
+
+User.hasMany(PostLike, { 
+  foreignKey: 'id_usuario', 
+  as: 'postLikes' 
+});
+PostLike.belongsTo(User, { 
+  foreignKey: 'id_usuario', 
+  as: 'user' 
+});
+
+CommunityPost.hasMany(PostComment, { 
+  foreignKey: 'id_post', 
+  as: 'comments' 
+});
+PostComment.belongsTo(CommunityPost, { 
+  foreignKey: 'id_post', 
+  as: 'post' 
+});
+
+User.hasMany(PostComment, { 
+  foreignKey: 'id_usuario', 
+  as: 'postComments' 
+});
+PostComment.belongsTo(User, { 
+  foreignKey: 'id_usuario', 
+  as: 'user' 
+});
+
 // Sync database
 const syncDatabase = async (): Promise<void> => {
   try {
@@ -91,8 +180,8 @@ const syncDatabase = async (): Promise<void> => {
     console.log('Database connection established successfully.');
     console.log('Timezone set to America/Sao_Paulo (UTC-3)');
     
-    // Sync all models
-    await sequelize.sync({ alter: true });
+    // Sync all models (without alter to avoid issues with existing data)
+    await sequelize.sync({ alter: false });
     console.log('Database synchronized successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
@@ -110,5 +199,11 @@ export {
   Goal,
   ThematicProgram,
   UserProgram,
+  CustomWorkout,
+  CustomWorkoutExercise,
+  WeeklyChallenge,
+  CommunityPost,
+  PostLike,
+  PostComment,
   syncDatabase
 };

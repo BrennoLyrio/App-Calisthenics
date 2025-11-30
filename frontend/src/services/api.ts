@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import { API_BASE_URL, StorageKeys } from '../constants';
 import {
   AuthResponse,
@@ -11,9 +13,22 @@ import {
   Workout,
   CreateWorkoutRequest,
   Goal,
+  CreateGoalRequest,
+  UpdateGoalRequest,
   WorkoutHistory,
   SaveWorkoutHistoryRequest,
   WorkoutStats,
+  CustomWorkout,
+  CreateCustomWorkoutRequest,
+  UpdateCustomWorkoutRequest,
+  ThematicProgram,
+  UserProgram,
+  CommunityPost,
+  PostComment,
+  WeeklyChallenge,
+  CreatePostRequest,
+  CreateCommentRequest,
+  RankingEntry,
 } from '../types';
 
 class ApiService {
@@ -166,6 +181,14 @@ class ApiService {
     return response.data;
   }
 
+  async getExerciseAlternatives(exerciseId: number, limit: number = 3): Promise<ApiResponse<Exercise[]>> {
+    const response: AxiosResponse<ApiResponse<Exercise[]>> = await this.api.get(
+      `/exercises/${exerciseId}/alternatives`,
+      { params: { limit } }
+    );
+    return response.data;
+  }
+
   // Workout endpoints
   async createWorkout(workoutData: CreateWorkoutRequest): Promise<ApiResponse<{ workout: Workout }>> {
     const response: AxiosResponse<ApiResponse<{ workout: Workout }>> = await this.api.post(
@@ -225,24 +248,123 @@ class ApiService {
     return response.data;
   }
 
-  // Goal endpoints (for future implementation)
-  async getGoals(): Promise<ApiResponse<Goal[]>> {
-    const response: AxiosResponse<ApiResponse<Goal[]>> = await this.api.get('/goals');
+  // Goal endpoints
+  async getGoals(status?: string): Promise<ApiResponse<Goal[]>> {
+    const params = status ? { status } : {};
+    const response: AxiosResponse<ApiResponse<Goal[]>> = await this.api.get('/goals', { params });
     return response.data;
   }
 
-  async createGoal(goalData: Partial<Goal>): Promise<ApiResponse<Goal>> {
+  async getGoalById(id: number): Promise<ApiResponse<Goal>> {
+    const response: AxiosResponse<ApiResponse<Goal>> = await this.api.get(`/goals/${id}`);
+    return response.data;
+  }
+
+  async getCompletedGoals(limit: number = 10): Promise<ApiResponse<Goal[]>> {
+    const response: AxiosResponse<ApiResponse<Goal[]>> = await this.api.get('/goals/completed', {
+      params: { limit }
+    });
+    return response.data;
+  }
+
+  async createGoal(goalData: CreateGoalRequest): Promise<ApiResponse<Goal>> {
     const response: AxiosResponse<ApiResponse<Goal>> = await this.api.post('/goals', goalData);
     return response.data;
   }
 
-  async updateGoal(id: number, goalData: Partial<Goal>): Promise<ApiResponse<Goal>> {
+  async updateGoal(id: number, goalData: UpdateGoalRequest): Promise<ApiResponse<Goal>> {
     const response: AxiosResponse<ApiResponse<Goal>> = await this.api.put(`/goals/${id}`, goalData);
+    return response.data;
+  }
+
+  async updateGoalProgress(id: number): Promise<ApiResponse<Goal>> {
+    const response: AxiosResponse<ApiResponse<Goal>> = await this.api.patch(`/goals/${id}/progress`);
     return response.data;
   }
 
   async deleteGoal(id: number): Promise<ApiResponse> {
     const response: AxiosResponse<ApiResponse> = await this.api.delete(`/goals/${id}`);
+    return response.data;
+  }
+
+  // Custom Workout endpoints
+  async getCustomWorkouts(): Promise<ApiResponse<CustomWorkout[]>> {
+    const response: AxiosResponse<ApiResponse<CustomWorkout[]>> = await this.api.get('/custom-workouts');
+    return response.data;
+  }
+
+  async getCustomWorkoutById(id: number): Promise<ApiResponse<CustomWorkout>> {
+    const response: AxiosResponse<ApiResponse<CustomWorkout>> = await this.api.get(`/custom-workouts/${id}`);
+    return response.data;
+  }
+
+  async createCustomWorkout(workoutData: CreateCustomWorkoutRequest): Promise<ApiResponse<CustomWorkout>> {
+    const response: AxiosResponse<ApiResponse<CustomWorkout>> = await this.api.post('/custom-workouts', workoutData);
+    return response.data;
+  }
+
+  async updateCustomWorkout(id: number, workoutData: UpdateCustomWorkoutRequest): Promise<ApiResponse<CustomWorkout>> {
+    const response: AxiosResponse<ApiResponse<CustomWorkout>> = await this.api.put(`/custom-workouts/${id}`, workoutData);
+    return response.data;
+  }
+
+  async deleteCustomWorkout(id: number): Promise<ApiResponse> {
+    const response: AxiosResponse<ApiResponse> = await this.api.delete(`/custom-workouts/${id}`);
+    return response.data;
+  }
+
+  // Thematic Program / Challenge endpoints
+  async getPrograms(categoria?: string, nivel?: string): Promise<ApiResponse<ThematicProgram[]>> {
+    const params: any = {};
+    if (categoria) params.categoria = categoria;
+    if (nivel) params.nivel = nivel;
+    
+    const response: AxiosResponse<ApiResponse<ThematicProgram[]>> = await this.api.get('/programs', { params });
+    return response.data;
+  }
+
+  async getProgramById(id: number): Promise<ApiResponse<ThematicProgram>> {
+    const response: AxiosResponse<ApiResponse<ThematicProgram>> = await this.api.get(`/programs/${id}`);
+    return response.data;
+  }
+
+  async searchPrograms(query: string): Promise<ApiResponse<ThematicProgram[]>> {
+    const response: AxiosResponse<ApiResponse<ThematicProgram[]>> = await this.api.get('/programs/search', {
+      params: { q: query }
+    });
+    return response.data;
+  }
+
+  async getUserPrograms(status?: 'ativo' | 'concluido' | 'pausado'): Promise<ApiResponse<UserProgram[]>> {
+    const params: any = {};
+    if (status) params.status = status;
+    
+    const response: AxiosResponse<ApiResponse<UserProgram[]>> = await this.api.get('/programs/user/my-programs', { params });
+    return response.data;
+  }
+
+  async joinProgram(programId: number): Promise<ApiResponse<{ userProgram: UserProgram; programa: ThematicProgram }>> {
+    const response: AxiosResponse<ApiResponse<{ userProgram: UserProgram; programa: ThematicProgram }>> = await this.api.post(`/programs/${programId}/join`);
+    return response.data;
+  }
+
+  async updateUserProgramProgress(userProgramId: number, data: { progresso?: number; dias_concluidos?: number; notas?: string }): Promise<ApiResponse<UserProgram>> {
+    const response: AxiosResponse<ApiResponse<UserProgram>> = await this.api.put(`/programs/user/${userProgramId}/progress`, data);
+    return response.data;
+  }
+
+  async completeProgram(userProgramId: number, avaliacao?: number): Promise<ApiResponse<{ userProgram: UserProgram; programa: ThematicProgram }>> {
+    const response: AxiosResponse<ApiResponse<{ userProgram: UserProgram; programa: ThematicProgram }>> = await this.api.put(`/programs/user/${userProgramId}/complete`, { avaliacao });
+    return response.data;
+  }
+
+  async toggleProgramStatus(userProgramId: number, status: 'ativo' | 'pausado'): Promise<ApiResponse<UserProgram>> {
+    const response: AxiosResponse<ApiResponse<UserProgram>> = await this.api.put(`/programs/user/${userProgramId}/status`, { status });
+    return response.data;
+  }
+
+  async leaveProgram(userProgramId: number): Promise<ApiResponse<null>> {
+    const response: AxiosResponse<ApiResponse<null>> = await this.api.delete(`/programs/user/${userProgramId}`);
     return response.data;
   }
 
@@ -311,6 +433,124 @@ class ApiService {
 
   async deleteWorkoutHistory(id: number): Promise<void> {
     await this.api.delete(`/workout-history/${id}`);
+  }
+
+  // Community Methods
+  async createPost(postData: CreatePostRequest, videoUri: string): Promise<CommunityPost> {
+    try {
+      // Get file info
+      const fileInfo = await FileSystem.getInfoAsync(videoUri);
+      if (!fileInfo.exists) {
+        throw new Error('Vídeo não encontrado');
+      }
+
+      // Get file extension from URI
+      const uriParts = videoUri.split('.');
+      const extension = uriParts[uriParts.length - 1] || 'mp4';
+      const mimeType = extension === 'mov' ? 'video/quicktime' : 'video/mp4';
+
+      const formData = new FormData();
+      
+      // Append video file - React Native FormData format
+      formData.append('video', {
+        uri: Platform.OS === 'android' ? videoUri : videoUri.replace('file://', ''),
+        type: mimeType,
+        name: `video.${extension}`,
+      } as any);
+      
+      formData.append('tipo', postData.tipo);
+      if (postData.titulo) formData.append('titulo', postData.titulo);
+      if (postData.descricao) formData.append('descricao', postData.descricao);
+      if (postData.duvida) formData.append('duvida', postData.duvida);
+      if (postData.id_desafio_semanal) formData.append('id_desafio_semanal', postData.id_desafio_semanal.toString());
+
+      const response: AxiosResponse<ApiResponse<{ post: CommunityPost }>> = await this.api.post(
+        '/community/posts',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          timeout: 60000, // 60 seconds timeout for video upload
+        }
+      );
+      return response.data.data!.post;
+    } catch (error: any) {
+      console.error('Error in createPost:', error);
+      throw error;
+    }
+  }
+
+  async getPosts(tipo?: 'rank' | 'help', idDesafio?: number, page: number = 1, limit: number = 20): Promise<ApiResponse<{ posts: CommunityPost[]; page: number; limit: number }>> {
+    const params: any = { page, limit };
+    if (tipo) params.tipo = tipo;
+    if (idDesafio) params.id_desafio = idDesafio;
+
+    const response: AxiosResponse<ApiResponse<{ posts: CommunityPost[]; page: number; limit: number }>> = await this.api.get(
+      '/community/posts',
+      { params }
+    );
+    return response.data;
+  }
+
+  async getPostById(id: number): Promise<CommunityPost> {
+    const response: AxiosResponse<ApiResponse<{ post: CommunityPost }>> = await this.api.get(
+      `/community/posts/${id}`
+    );
+    return response.data.data!.post;
+  }
+
+  async deletePost(id: number): Promise<void> {
+    await this.api.delete(`/community/posts/${id}`);
+  }
+
+  async toggleLike(postId: number): Promise<{ liked: boolean; likesCount: number }> {
+    const response: AxiosResponse<ApiResponse<{ liked: boolean; likesCount: number }>> = await this.api.post(
+      `/community/posts/${postId}/like`
+    );
+    return response.data.data!;
+  }
+
+  async getLikes(postId: number): Promise<{ likesCount: number; userLiked: boolean }> {
+    const response: AxiosResponse<ApiResponse<{ likesCount: number; userLiked: boolean }>> = await this.api.get(
+      `/community/posts/${postId}/likes`
+    );
+    return response.data.data!;
+  }
+
+  async createComment(postId: number, commentData: CreateCommentRequest): Promise<PostComment> {
+    const response: AxiosResponse<ApiResponse<{ comment: PostComment }>> = await this.api.post(
+      `/community/posts/${postId}/comments`,
+      commentData
+    );
+    return response.data.data!.comment;
+  }
+
+  async getComments(postId: number, page: number = 1, limit: number = 50): Promise<ApiResponse<{ comments: PostComment[]; total: number; page: number; limit: number }>> {
+    const params = { page, limit };
+    const response: AxiosResponse<ApiResponse<{ comments: PostComment[]; total: number; page: number; limit: number }>> = await this.api.get(
+      `/community/posts/${postId}/comments`,
+      { params }
+    );
+    return response.data;
+  }
+
+  async deleteComment(commentId: number): Promise<void> {
+    await this.api.delete(`/community/comments/${commentId}`);
+  }
+
+  async getCurrentChallenge(): Promise<WeeklyChallenge | null> {
+    const response: AxiosResponse<ApiResponse<{ challenge: WeeklyChallenge | null }>> = await this.api.get(
+      '/community/challenges/current'
+    );
+    return response.data.data?.challenge || null;
+  }
+
+  async getRanking(): Promise<{ challenge: WeeklyChallenge | null; ranking: RankingEntry[] }> {
+    const response: AxiosResponse<ApiResponse<{ challenge: WeeklyChallenge | null; ranking: RankingEntry[] }>> = await this.api.get(
+      '/community/challenges/ranking'
+    );
+    return response.data.data || { challenge: null, ranking: [] };
   }
 }
 

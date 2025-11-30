@@ -28,6 +28,28 @@ export const getAllExercises = async (req: Request, res: Response): Promise<void
     if (search) {
       exercises = await Exercise.searchExercises(search as string);
     } else {
+      // Lista de exercícios alternativos que devem ser EXCLUÍDOS do treino principal
+      // Eles só aparecem quando o usuário clica em "Ver alternativas"
+      const alternativeExercises = [
+        'Flexão Diamante',
+        'Flexão Inclinada',
+        'Flexão com Apoio no Joelho',
+        'Agachamento Sumo',
+        'Agachamento Búlgaro',
+        'Afundo',
+        'Prancha com Elevação de Perna',
+        'Mountain Climber',
+        'Dead Bug',
+        'Burpee Simplificado',
+        'Agachamento com Salto',
+        'Prancha com Rotação'
+      ];
+      
+      // Excluir exercícios alternativos do treino principal
+      whereClause.nome = {
+        [Op.notIn]: alternativeExercises
+      };
+      
       const queryOptions: any = {
         where: whereClause,
         order: [['nome', 'ASC']]
@@ -227,6 +249,42 @@ export const getDifficultyLevels = async (req: Request, res: Response): Promise<
     const response: ApiResponse = {
       success: false,
       message: 'Erro ao recuperar níveis de dificuldade',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+    res.status(500).json(response);
+  }
+};
+
+export const getExerciseAlternatives = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { limit = 3 } = req.query;
+    
+    const exerciseId = parseInt(id, 10);
+    
+    if (isNaN(exerciseId)) {
+      const response: ApiResponse = {
+        success: false,
+        message: 'ID do exercício inválido'
+      };
+      res.status(400).json(response);
+      return;
+    }
+    
+    const alternatives = await Exercise.findAlternatives(exerciseId, Number(limit));
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Exercícios alternativos recuperados com sucesso',
+      data: alternatives
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Get exercise alternatives error:', error);
+    const response: ApiResponse = {
+      success: false,
+      message: 'Erro ao recuperar exercícios alternativos',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     };
     res.status(500).json(response);

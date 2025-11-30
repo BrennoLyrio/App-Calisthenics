@@ -118,14 +118,19 @@ export const WorkoutCompletedScreen: React.FC<WorkoutCompletedScreenProps> = ({
             
             workoutMetadata = {
               exercicios: exercises,
-              foco: workoutFocus
+              foco: workoutFocus,
+              tipo: workoutData?.isCustomWorkout ? 'personalizado' : 'padrao',
+              rotina_id: workoutData?.customWorkoutId || undefined
             };
           }
           
           const notasValue = Object.keys(workoutMetadata).length > 0 ? JSON.stringify(workoutMetadata) : undefined;
           
+          // Use custom workout name if available, otherwise use default
+          const workoutName = route.params.workoutName || workoutData?.workoutName || 'Treino Diário';
+          
           await apiService.saveWorkoutHistory({
-            nome_treino: 'Treino Diário', // Nome do treino personalizado
+            nome_treino: workoutName,
             duracao: totalDuration * 60, // Convert minutes to seconds
             series_realizadas: completedExercises * 3, // Assuming 3 sets per exercise
             repeticoes_realizadas: completedExercises * 10, // Estimated reps

@@ -6,7 +6,8 @@ import {
   getExercisesByDifficulty,
   searchExercises,
   getExerciseCategories,
-  getDifficultyLevels
+  getDifficultyLevels,
+  getExerciseAlternatives
 } from '../controllers/exerciseController';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.get('/difficulty-levels', getDifficultyLevels);
 router.get('/search', searchExercises);
 router.get('/category/:categoria', getExercisesByCategory);
 router.get('/difficulty/:nivel', getExercisesByDifficulty);
+router.get('/:id/alternatives', getExerciseAlternatives);
 router.get('/:id', getExerciseById);
 
 export default router;

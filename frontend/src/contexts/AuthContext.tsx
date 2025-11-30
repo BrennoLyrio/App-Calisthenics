@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { User, RegisterRequest, AuthContextType } from '../types';
 import { apiService } from '../services/api';
 import { StorageKeys } from '../constants';
+import { notificationService } from '../services/notificationService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -19,6 +20,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     loadStoredAuth();
   }, []);
+
+  // Inicia/para notificações quando o usuário faz login/logout
+  useEffect(() => {
+    if (user && !isLoading) {
+      // Usuário autenticado - inicia notificações motivacionais
+      console.log('👤 Usuário autenticado - iniciando notificações...');
+      notificationService.startMotivationalNotifications();
+    } else if (!user && !isLoading) {
+      // Usuário não autenticado - para notificações
+      console.log('👤 Usuário não autenticado - parando notificações...');
+      notificationService.stopMotivationalNotifications();
+    }
+
+    // Cleanup ao desmontar
+    return () => {
+      if (!user) {
+        notificationService.stopMotivationalNotifications();
+      }
+    };
+  }, [user, isLoading]);
 
   const loadStoredAuth = async () => {
     try {

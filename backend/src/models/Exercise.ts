@@ -84,6 +84,54 @@ class Exercise extends Model<ExerciseAttributes, ExerciseCreationAttributes> imp
       order: [['nome', 'ASC']]
     });
   }
+
+  /**
+   * Busca exercícios alternativos baseado em categoria e músculos trabalhados similares
+   * @param exerciseId ID do exercício para o qual buscar alternativas
+   * @param limit Limite de alternativas a retornar (padrão: 3)
+   */
+  public static async findAlternatives(exerciseId: number, limit: number = 3): Promise<Exercise[]> {
+    // Buscar o exercício original
+    const originalExercise = await Exercise.findByPk(exerciseId);
+    
+    if (!originalExercise) {
+      return [];
+    }
+
+    // Buscar exercícios alternativos com:
+    // - Mesma categoria (e não é aquecimento/alongamento)
+    // - Mesmo nível de dificuldade
+    // - Pelo menos 1 músculo trabalhado em comum
+    // - Diferente do exercício original
+    // - Ativo
+    
+    // Se o exercício é aquecimento ou alongamento, não buscar alternativas
+    if (originalExercise.categoria === 'aquecimento' || originalExercise.categoria === 'alongamento') {
+      return [];
+    }
+    
+    const alternatives = await Exercise.findAll({
+      where: {
+        id: { [Op.ne]: exerciseId },
+        ativo: true,
+        categoria: originalExercise.categoria,
+        nivel_dificuldade: originalExercise.nivel_dificuldade
+      },
+      limit: limit * 2, // Buscar mais para filtrar por músculos depois
+      order: [['nome', 'ASC']]
+    });
+
+    // Filtrar por músculos trabalhados em comum
+    const originalMuscles = originalExercise.musculos_trabalhados || [];
+    const filteredAlternatives = alternatives.filter(alt => {
+      const altMuscles = alt.musculos_trabalhados || [];
+      // Verificar se há pelo menos 1 músculo em comum
+      return originalMuscles.some(muscle => altMuscles.includes(muscle));
+    });
+
+    // Limitar e retornar
+    return filteredAlternatives.slice(0, limit);
+  }
 }
 
 Exercise.init(

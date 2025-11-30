@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.calisthenicsapp.mobile"
+      "bundleIdentifier": "com.calisthenicsapp.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos de acesso à câmera para gravar vídeos dos desafios e dúvidas.",
+        "NSPhotoLibraryUsageDescription": "Precisamos de acesso à galeria para selecionar vídeos."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,13 +27,41 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.calisthenicsapp.mobile"
+      "package": "com.calisthenicsapp.mobile",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF6B35",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Precisamos de acesso à câmera para gravar vídeos dos desafios e dúvidas.",
+          "microphonePermission": "Permissão necessária para gravação de vídeo (os vídeos são gravados sem áudio).",
+          "recordAudioAndroid": true
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#FF6B35",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Novas notificações"
+    }
   }
 }

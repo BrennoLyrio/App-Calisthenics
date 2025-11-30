@@ -6,12 +6,17 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Import routes
 import authRoutes from './routes/auth';
 import exerciseRoutes from './routes/exercises';
 import workoutRoutes from './routes/workouts';
 import workoutHistoryRoutes from './routes/workoutHistory';
+import goalRoutes from './routes/goals';
+import customWorkoutRoutes from './routes/customWorkouts';
+import thematicProgramRoutes from './routes/thematicPrograms';
+import communityRoutes from './routes/community';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -78,9 +83,13 @@ app.use(compression());
 // Logging
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware (must be before multer routes)
+// Note: multer will handle multipart/form-data, so we exclude it from JSON parsing
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve static files (videos)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -103,6 +112,10 @@ app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/exercises`, exerciseRoutes);
 app.use(`/api/${API_VERSION}/workouts`, workoutRoutes);
 app.use(`/api/${API_VERSION}/workout-history`, workoutHistoryRoutes);
+app.use(`/api/${API_VERSION}/goals`, goalRoutes);
+app.use(`/api/${API_VERSION}/custom-workouts`, customWorkoutRoutes);
+app.use(`/api/${API_VERSION}/programs`, thematicProgramRoutes);
+app.use(`/api/${API_VERSION}/community`, communityRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -114,7 +127,11 @@ app.get('/', (req, res) => {
       auth: `/api/${API_VERSION}/auth`,
       exercises: `/api/${API_VERSION}/exercises`,
       workouts: `/api/${API_VERSION}/workouts`,
-      workoutHistory: `/api/${API_VERSION}/workout-history`
+      workoutHistory: `/api/${API_VERSION}/workout-history`,
+      goals: `/api/${API_VERSION}/goals`,
+      customWorkouts: `/api/${API_VERSION}/custom-workouts`,
+      programs: `/api/${API_VERSION}/programs`,
+      community: `/api/${API_VERSION}/community`
     }
   });
 });

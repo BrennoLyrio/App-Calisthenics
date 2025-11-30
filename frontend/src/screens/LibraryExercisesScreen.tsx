@@ -19,17 +19,24 @@ import { ExerciseCard, Card } from '../components';
 import { apiService } from '../services/api';
 import { Colors, Typography, Spacing, BorderRadius } from '../constants';
 import { Exercise } from '../types';
+import { CommonActions } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 interface LibraryExercisesScreenProps {
   navigation: any;
+  route: {
+    params?: {
+      selectMode?: boolean;
+      onExerciseSelect?: (exercise: Exercise) => void;
+    };
+  };
 }
 
 type FilterCategory = 'superiores' | 'inferiores' | 'core' | 'completo' | 'all';
 type FilterDifficulty = 'iniciante' | 'intermediario' | 'avancado' | 'all';
 
-export const LibraryExercisesScreen: React.FC<LibraryExercisesScreenProps> = ({ navigation }) => {
+export const LibraryExercisesScreen: React.FC<LibraryExercisesScreenProps> = ({ navigation, route }) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,10 +99,43 @@ export const LibraryExercisesScreen: React.FC<LibraryExercisesScreenProps> = ({ 
   };
 
   const handleExercisePress = (exercise: Exercise) => {
-    navigation.navigate('ExercisePreview', { 
-      exercise,
-      isFromWorkout: false 
-    });
+    const selectMode = route.params?.selectMode;
+    
+    if (selectMode) {
+      const timestamp = Date.now();
+      console.log('🔙 Voltando com exercício:', exercise.id, exercise.nome, 'timestamp:', timestamp);
+      
+      // SOLUÇÃO DEFINITIVA: Usar dispatch com setParams para atualizar a tela anterior
+      const state = navigation.getState();
+      const routes = state.routes;
+      
+      // Encontrar o index da tela CustomWorkoutEditor
+      const customWorkoutEditorIndex = routes.findIndex((r: any) => r.name === 'CustomWorkoutEditor');
+      
+      if (customWorkoutEditorIndex !== -1) {
+        const editorRoute = routes[customWorkoutEditorIndex];
+        
+        // Usar CommonActions.setParams para atualizar params da tela específica
+        navigation.dispatch({
+          ...CommonActions.setParams({
+            selectedExercise: exercise,
+            _timestamp: timestamp,
+          }),
+          source: editorRoute.key,
+        });
+        
+        console.log('✅ Params definidos, voltando...');
+      }
+      
+      // Voltar para a tela anterior
+      navigation.goBack();
+    } else {
+      // Normal mode: navigate to preview
+      navigation.navigate('ExercisePreview', { 
+        exercise,
+        isFromWorkout: false 
+      });
+    }
   };
 
   const getCategoryLabel = (category: FilterCategory) => {
@@ -421,4 +461,3 @@ const styles = StyleSheet.create({
 });
 
 export default LibraryExercisesScreen;
-

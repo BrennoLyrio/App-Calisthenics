@@ -96,8 +96,12 @@ Desenvolvido com as mais modernas tecnologias mobile, garantindo performance, es
 - **React Native Chart Kit** - Gráficos e visualizações
 - **React Native YouTube Iframe** - Player de vídeos
 - **Expo Video** - Reprodução de vídeos
-- **React Native Vector Icons** - Biblioteca de ícones
-- **React Native Toast Message** - Notificações
+- **Expo Camera** - Câmera para gravação de vídeos
+- **Expo AV** - Reprodução de áudio e vídeo
+- **Expo File System** - Gerenciamento de arquivos
+- **Expo Media Library** - Acesso à biblioteca de mídia
+- **Expo Notifications** - Notificações locais
+- **React Native Toast Message** - Notificações toast
 - **React Native WebView** - Visualização de conteúdo web
 
 
@@ -145,19 +149,33 @@ npm run web
   - GET `/workouts/history/stats` - Estatísticas de treinos
   - GET `/workouts/history` - Histórico de treinos
   - POST `/workouts/history` - Salvar treino no histórico
+  - GET `/goals` - Listar metas pessoais
+  - POST `/goals` - Criar meta
+  - GET `/goals/:id` - Detalhes da meta
+  - PUT `/goals/:id` - Atualizar meta
+  - DELETE `/goals/:id` - Excluir meta
+  - GET `/custom-workouts` - Listar rotinas personalizadas
+  - POST `/custom-workouts` - Criar rotina personalizada
+  - GET `/programs` - Listar programas e desafios
+  - POST `/programs/:id/join` - Participar de programa
+  - GET `/exercises/:id/alternatives` - Buscar exercícios alternativos
+  - GET `/community/posts` - Listar posts da comunidade
+  - POST `/community/posts` - Criar post (com vídeo)
+  - GET `/community/challenges/current` - Desafio semanal atual
 
 
 
 ## 🎯 Funcionalidades Implementadas
 
-### RF-001: Gestão de Perfil ✅
+### RF-001: Gestão de Perfil e Autenticação ✅
 - ✅ Criação de perfil individual
 - ✅ Formulários com validação
 - ✅ Integração com backend
 - ✅ Armazenamento local de dados
 - ✅ Fluxo de onboarding completo
+- ✅ Login e autenticação JWT
 
-### RF-002: Sistema Progressivo ✅
+### RF-002: Sistema de Treinamento Progressivo ✅
 - ✅ Estrutura de níveis implementada
 - ✅ Categorização de exercícios
 - ✅ Base para planos de treino
@@ -182,6 +200,11 @@ npm run web
 - ✅ Visualização detalhada de cada exercício
 - ✅ Interface organizada e intuitiva
 
+### RF-006: Geração de Treinos Automáticos ✅
+- ✅ Geração automática baseada no perfil do usuário
+- ✅ Treinos personalizados por nível e foco
+- ✅ Configuração automática de séries, repetições e descanso
+
 ### RF-007: Histórico de Treinos ✅
 - ✅ Registro automático de treinos
 - ✅ Estatísticas gerais (total de treinos, calorias, tempo)
@@ -196,7 +219,34 @@ npm run web
   - Intensidade
   - Data e hora
 
-### RF-012: Aquecimento e Alongamento ✅
+### RF-008: Gráficos e Relatórios Avançados ✅
+- ✅ Gráfico de progresso semanal
+- ✅ Gráfico de distribuição por dia da semana
+- ✅ Gráfico de histórico recente
+- ✅ Visualizações interativas e responsivas
+
+### RF-009: Notificações Inteligentes ✅
+- ✅ Notificações locais
+- ✅ Notificações motivacionais periódicas
+- ✅ Suporte para Expo Go e builds nativos
+- ✅ Sistema de configuração de frequência
+
+### RF-010: Metas Pessoais ✅
+- ✅ Criação e gestão de metas
+- ✅ Tipos de metas (treinos, calorias, tempo, etc.)
+- ✅ Acompanhamento de progresso
+- ✅ Filtros por status (em andamento, concluída, pausada)
+- ✅ Visualização detalhada de cada meta
+
+### RF-011: Desafios e Programas Temáticos ✅
+- ✅ Listagem de desafios e programas
+- ✅ Filtros por categoria e nível
+- ✅ Participação em programas
+- ✅ Acompanhamento de progresso
+- ✅ Sistema de pausar/retomar
+- ✅ Opção de desistir do programa
+
+### RF-012: Módulo de Aquecimento e Alongamento ✅
 - ✅ Módulo de aquecimento dedicado
 - ✅ Módulo de alongamento dedicado
 - ✅ Exercícios específicos para cada categoria
@@ -204,29 +254,72 @@ npm run web
 - ✅ Treinamento rápido sem rest time
 - ✅ Não contabiliza como treino regular
 
-### RF-016: Interface Intuitiva ✅
-- ✅ Navegação por tabs
+### RF-013: Recomendações de Recuperação ✅
+- ✅ Artigos sobre recuperação e descanso
+- ✅ Dicas de alongamento e mobilidade
+- ✅ Informações sobre sono e recuperação
+- ✅ Integrado na seção de conteúdo educativo
+
+### RF-013: Comunidade Interna ✅
+- ✅ Aba "Rank" com desafios semanais
+- ✅ Aba "Ajuda" para feedback sobre movimentos
+- ✅ Gravação e upload de vídeos
+- ✅ Sistema de curtidas e comentários
+- ✅ Ranking semanal por curtidas
+- ✅ Visualização de posts da comunidade
+
+### RF-014: Funcionamento Offline ✅
+- ✅ Estrutura preparada para funcionamento offline
+- ✅ Cache local de dados
+
+### RF-015: Interface Intuitiva ✅
+- ✅ Navegação por tabs (Início, Educação, Comunidade)
 - ✅ Design moderno e responsivo
 - ✅ Gradientes e animações
 - ✅ Ícones intuitivos
 - ✅ Feedback visual
 - ✅ Mensagens de erro e sucesso
 
-## 📊 Próximas Funcionalidades (Sprint 3)
+### RF-016: Integração com Wearables ⏸️
+- ⏸️ Removido do escopo atual
 
-- 🔲 RF-006: Geração de Treinos Automáticos
-- 🔲 RF-008: Gráficos e Relatórios Avançados
-- 🔲 RF-009: Notificações Inteligentes
-- 🔲 RF-010: Metas Pessoais
-- 🔲 RF-011: Desafios e Programas Temáticos
-- 🔲 RF-013: Recomendações de Recuperação
-- 🔲 RF-014: Comunidade Interna
-- 🔲 RF-015: Funcionamento Offline
-- 🔲 RF-017: Rotinas Personalizadas
-- 🔲 RF-018: Integração com Wearables
-- 🔲 RF-019: Adaptações Personalizadas
-- 🔲 RF-020: Conteúdo Educativo Expandido
+### RF-017: Rotinas Personalizadas ✅
+- ✅ Criação de rotinas personalizadas
+- ✅ Adição de exercícios à rotina
+- ✅ Configuração de séries, repetições e descanso
+- ✅ Edição e exclusão de rotinas
+- ✅ Execução de rotinas personalizadas
+- ✅ Integração com biblioteca de exercícios
 
-## 📞 Suporte
+### RF-018: Conteúdo Educativo ✅
+- ✅ Artigos sobre calistenia
+- ✅ Dicas de nutrição
+- ✅ Guias de progressão
+- ✅ Recomendações de recuperação
+- ✅ Interface organizada por categorias
+- ✅ Visualização detalhada de artigos
+- ✅ Referências científicas incluídas
 
-Para dúvidas ou problemas, consulte a documentação do backend ou entre em contato
+### RF-019: Adaptações Personalizadas ✅
+- ✅ Sistema de exercícios alternativos
+- ✅ Busca de alternativas baseada em categoria e músculos
+- ✅ Modal para visualizar e substituir exercícios
+- ✅ Integrado nos treinos automáticos
+- ✅ 12 exercícios alternativos adicionados ao banco
+- ✅ Artigos sobre calistenia
+- ✅ Dicas de nutrição
+- ✅ Guias de progressão
+- ✅ Recomendações de recuperação
+- ✅ Interface organizada por categorias
+- ✅ Visualização detalhada de artigos
+- ✅ Referências científicas incluídas
+
+## 📊 Status Geral do Projeto
+
+**Total de Funcionalidades Implementadas: 19/20**
+
+- ✅ **Sprint 1**: 3/3 funcionalidades (RF-001, RF-002, RF-015)
+- ✅ **Sprint 2**: 5/5 funcionalidades (RF-003, RF-004, RF-005, RF-007, RF-011)
+- ✅ **Sprint 3**: 11/11 funcionalidades (RF-006, RF-008, RF-009, RF-010, RF-012, RF-013, RF-014, RF-017, RF-018, RF-019, RF-020)
+- ⏸️ **RF-016** (Wearables): Removido do escopo
+

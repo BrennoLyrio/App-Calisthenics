@@ -249,8 +249,13 @@ export const WorkoutSessionScreen: React.FC<WorkoutSessionScreenProps> = ({
       workout: {
         exercises,
         totalDuration: totalDuration,
-        totalCalories: totalCalories
+        totalCalories: totalCalories,
+        workoutName: (workout as any)?.workoutName,
+        isCustomWorkout: (workout as any)?.isCustomWorkout,
+        customWorkoutId: (workout as any)?.customWorkoutId,
       },
+      workoutName: (workout as any)?.workoutName,
+      isCustomWorkout: (workout as any)?.isCustomWorkout,
       skipSaveHistory: skipSaveHistory || false
     });
   }, [workoutStartTime, navigation, exercises.length, workout, skipSaveHistory, exercises]);

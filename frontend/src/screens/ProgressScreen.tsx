@@ -444,7 +444,7 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({ navigation }) =>
               style={styles.chartStyle}
               bezier
               withHorizontalLabels={true}
-              withVerticalLabels={true}
+              withVerticalLabels={false} // ajustar mostrando o dia que treinei
               withInnerLines={true}
               withOuterLines={false}
               segments={2}

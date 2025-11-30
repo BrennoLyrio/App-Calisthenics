@@ -98,6 +98,108 @@ export interface WorkoutExercise {
   exercise?: Exercise;
 }
 
+// Custom Workout Types
+export interface CustomWorkout {
+  id: number;
+  id_usuario: number;
+  nome: string;
+  descricao?: string;
+  duracao_estimada?: number;
+  calorias_estimadas?: number;
+  ativo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  exercises?: CustomWorkoutExercise[];
+}
+
+export interface CustomWorkoutExercise {
+  id: number;
+  id_rotina: number;
+  id_exercicio: number;
+  series: number;
+  repeticoes?: number;
+  tempo_execucao?: number;
+  descanso?: number;
+  ordem: number;
+  observacoes?: string;
+  exercise?: Exercise;
+}
+
+export interface CreateCustomWorkoutRequest {
+  nome: string;
+  descricao?: string;
+  exercicios: {
+    id_exercicio: number;
+    series: number;
+    repeticoes?: number;
+    tempo_execucao?: number;
+    descanso?: number;
+    ordem: number;
+    observacoes?: string;
+  }[];
+}
+
+export interface UpdateCustomWorkoutRequest {
+  nome?: string;
+  descricao?: string;
+  exercicios?: {
+    id_exercicio: number;
+    series: number;
+    repeticoes?: number;
+    tempo_execucao?: number;
+    descanso?: number;
+    ordem: number;
+    observacoes?: string;
+  }[];
+}
+
+// Thematic Program / Challenge Types
+export interface ThematicProgram {
+  id: number;
+  nome: string;
+  descricao: string;
+  duracao_dias: number;
+  certificado_url?: string;
+  nivel_requerido: 'iniciante' | 'intermediario' | 'avancado';
+  ativo: boolean;
+  categoria: 'desafio' | 'programa' | 'curso';
+  objetivo_principal: string;
+  exercicios_incluidos: number[];
+  requisitos: string[];
+  beneficios: string[];
+  dificuldade_inicial: number;
+  dificuldade_final: number;
+  calorias_estimadas_total: number;
+  tempo_estimado_diario: number;
+  imagem_url?: string;
+  video_apresentacao?: string;
+  stats?: {
+    total_participants?: number;
+    avg_progress?: number;
+    avg_rating?: number;
+    completed_count?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserProgram {
+  id: number;
+  id_usuario: number;
+  id_programa: number;
+  progresso: number;
+  status: 'ativo' | 'concluido' | 'pausado';
+  data_inicio: string;
+  data_fim?: string;
+  dias_concluidos: number;
+  ultima_atividade?: string;
+  notas?: string;
+  avaliacao?: number;
+  programa?: ThematicProgram;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface WorkoutHistory {
   id: number;
   id_usuario: number;
@@ -169,6 +271,33 @@ export interface Goal {
   status: 'em_andamento' | 'concluida' | 'pausada';
   categoria: 'forca' | 'resistencia' | 'flexibilidade' | 'perda_peso' | 'ganho_massa' | 'outro';
   unidade_medida: string;
+  meta_semanal?: number;
+  observacoes?: string;
+  progress?: number; // Calculated progress percentage
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateGoalRequest {
+  descricao: string;
+  tipo: 'curto' | 'medio' | 'longo';
+  valor_alvo: number;
+  data_inicio?: string;
+  data_fim: string;
+  categoria: 'forca' | 'resistencia' | 'flexibilidade' | 'perda_peso' | 'ganho_massa' | 'outro';
+  unidade_medida: string;
+  meta_semanal?: number;
+  observacoes?: string;
+}
+
+export interface UpdateGoalRequest {
+  descricao?: string;
+  valor_alvo?: number;
+  valor_atual?: number;
+  data_fim?: string;
+  status?: 'em_andamento' | 'concluida' | 'pausada';
+  meta_semanal?: number;
+  observacoes?: string;
 }
 
 // API Response Types
@@ -195,14 +324,47 @@ export type RootStackParamList = {
   OnboardingExperience: undefined;
   OnboardingResources: undefined;
   OnboardingPhysical: undefined;
+  MainTabs: undefined;
   Main: undefined;
   Profile: undefined;
   Workouts: undefined;
   Exercises: undefined;
-  LibraryExercises: undefined;
+  LibraryExercises: {
+    selectMode?: boolean;
+  } | undefined;
   Warmup: undefined;
   Cooldown: undefined;
   Progress: undefined;
+  Goals: undefined;
+  CreateGoal: undefined;
+  GoalDetail: {
+    goalId: number;
+  };
+  CustomWorkouts: undefined;
+  CustomWorkoutEditor: {
+    workoutId?: number;
+    selectedExercise?: Exercise;
+  };
+  Challenges: undefined;
+  ChallengeDetail: {
+    programId: number;
+  };
+  Education: undefined;
+  ArticleList: {
+    category: 'articles' | 'nutrition' | 'progression' | 'recovery';
+  };
+  ArticleDetail: {
+    articleId: string;
+    category: 'articles' | 'nutrition' | 'progression' | 'recovery';
+  };
+  Community: undefined;
+  VideoRecorder: {
+    tipo: 'rank' | 'help';
+    id_desafio_semanal?: number;
+  };
+  PostDetail: {
+    postId: number;
+  };
   ExercisePreview: {
     exercise: Exercise;
     duration?: number;
@@ -221,6 +383,9 @@ export type RootStackParamList = {
       exercises: WorkoutExerciseDetail[];
       totalDuration: number;
       totalCalories: number;
+      workoutName?: string;
+      isCustomWorkout?: boolean;
+      customWorkoutId?: number;
     };
     initialExerciseIndex?: number;
     exercise?: Exercise;
@@ -241,7 +406,12 @@ export type RootStackParamList = {
       exercises: WorkoutExerciseDetail[];
       totalDuration: number;
       totalCalories: number;
+      workoutName?: string;
+      isCustomWorkout?: boolean;
+      customWorkoutId?: number;
   };
+    workoutName?: string;
+    isCustomWorkout?: boolean;
     skipSaveHistory?: boolean;
   };
 };
@@ -301,4 +471,68 @@ export interface OnboardingPhysicalFormData {
   peso: string;
   altura: string;
   idade: string;
+}
+
+// Community Types
+export interface WeeklyChallenge {
+  id: number;
+  titulo: string;
+  descricao?: string;
+  data_inicio: string;
+  data_fim: string;
+  ativo: boolean;
+}
+
+export interface CommunityUser {
+  id: number;
+  nome: string;
+  foto_perfil?: string;
+}
+
+export interface CommunityPost {
+  id: number;
+  id_usuario: number;
+  tipo: 'rank' | 'help';
+  titulo?: string;
+  descricao?: string;
+  duvida?: string;
+  video_url: string;
+  id_desafio_semanal?: number;
+  curtidas_count: number;
+  comentarios_count: number;
+  data_postagem: string;
+  status: 'ativo' | 'removido';
+  user?: CommunityUser;
+  weeklyChallenge?: WeeklyChallenge;
+  userLiked?: boolean;
+}
+
+export interface PostComment {
+  id: number;
+  id_post: number;
+  id_usuario: number;
+  texto: string;
+  createdAt: string;
+  user?: CommunityUser;
+}
+
+export interface CreatePostRequest {
+  tipo: 'rank' | 'help';
+  titulo?: string;
+  descricao?: string;
+  duvida?: string;
+  id_desafio_semanal?: number;
+}
+
+export interface CreateCommentRequest {
+  texto: string;
+}
+
+export interface RankingEntry {
+  position: number;
+  postId: number;
+  videoUrl: string;
+  likesCount: number;
+  user: CommunityUser;
+  createdAt: string;
 }

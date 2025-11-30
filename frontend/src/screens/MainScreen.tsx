@@ -94,7 +94,10 @@ export const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionCard}>
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('CustomWorkouts')}
+                >
                   <Ionicons name="play-circle" size={32} color={Colors.primary} />
                   <Text style={styles.actionTitle}>Treinos</Text>
                   <Text style={styles.actionDescription}>
@@ -110,6 +113,28 @@ export const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                   <Text style={styles.actionTitle}>Progresso</Text>
                   <Text style={styles.actionDescription}>
                     Acompanhe evolução
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('Goals')}
+                >
+                  <Ionicons name="flag" size={32} color={Colors.primary} />
+                  <Text style={styles.actionTitle}>Metas</Text>
+                  <Text style={styles.actionDescription}>
+                    Defina objetivos
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('Challenges')}
+                >
+                  <Ionicons name="trophy" size={32} color={Colors.primary} />
+                  <Text style={styles.actionTitle}>Desafios</Text>
+                  <Text style={styles.actionDescription}>
+                    Programas temáticos
                   </Text>
                 </TouchableOpacity>
 
