@@ -229,8 +229,9 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    // Update password
+    // Update password - precisa fazer hash antes de salvar
     user.senha_hash = nova_senha;
+    await user.hashPassword(); // Faz o hash da nova senha
     await user.save();
 
     const response: ApiResponse = {

@@ -27,3 +27,4 @@ export { ArticleDetailScreen } from './ArticleDetailScreen';
 export { CommunityScreen } from './CommunityScreen';
 export { VideoRecorderScreen } from './VideoRecorderScreen';
 export { PostDetailScreen } from './PostDetailScreen';
+export { ProfileScreen } from './ProfileScreen';

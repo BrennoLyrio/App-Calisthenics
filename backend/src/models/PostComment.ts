@@ -6,25 +6,25 @@ interface PostCommentAttributes {
   id_post: number;
   id_usuario: number;
   texto: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
-interface PostCommentCreationAttributes extends Optional<PostCommentAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+interface PostCommentCreationAttributes extends Optional<PostCommentAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
 class PostComment extends Model<PostCommentAttributes, PostCommentCreationAttributes> implements PostCommentAttributes {
   public id!: number;
   public id_post!: number;
   public id_usuario!: number;
   public texto!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public readonly created_at!: Date;
+  public readonly updated_at!: Date;
 
   // Static methods
   public static async findByPost(postId: number, limit: number = 50, offset: number = 0): Promise<PostComment[]> {
     return PostComment.findAll({
       where: { id_post: postId },
-      order: [['createdAt', 'ASC']],
+      order: [['created_at', 'ASC']],
       limit,
       offset,
     });
@@ -77,6 +77,9 @@ PostComment.init(
     modelName: 'PostComment',
     tableName: 'post_comments',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    underscored: true,
   }
 );
 

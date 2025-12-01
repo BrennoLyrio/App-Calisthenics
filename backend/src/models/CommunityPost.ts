@@ -14,11 +14,11 @@ interface CommunityPostAttributes {
   comentarios_count: number;
   data_postagem: Date;
   status: 'ativo' | 'removido';
-  createdAt?: Date;
-  updatedAt?: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
-interface CommunityPostCreationAttributes extends Optional<CommunityPostAttributes, 'id' | 'curtidas_count' | 'comentarios_count' | 'status' | 'data_postagem' | 'createdAt' | 'updatedAt'> {}
+interface CommunityPostCreationAttributes extends Optional<CommunityPostAttributes, 'id' | 'curtidas_count' | 'comentarios_count' | 'status' | 'data_postagem' | 'created_at' | 'updated_at'> {}
 
 class CommunityPost extends Model<CommunityPostAttributes, CommunityPostCreationAttributes> implements CommunityPostAttributes {
   public id!: number;
@@ -33,8 +33,8 @@ class CommunityPost extends Model<CommunityPostAttributes, CommunityPostCreation
   public comentarios_count!: number;
   public data_postagem!: Date;
   public status!: 'ativo' | 'removido';
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public readonly created_at!: Date;
+  public readonly updated_at!: Date;
 
   // Static methods
   public static async findByType(tipo: 'rank' | 'help', limit: number = 20, offset: number = 0): Promise<CommunityPost[]> {
@@ -184,6 +184,9 @@ CommunityPost.init(
     modelName: 'CommunityPost',
     tableName: 'community_posts',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    underscored: true, // Usar snake_case para manter consistência com o banco
   }
 );
 

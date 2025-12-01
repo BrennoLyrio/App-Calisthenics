@@ -64,8 +64,25 @@ const upload = multer({
 export const uploadVideo = upload.single('video');
 
 // Get file URL helper
-export const getVideoUrl = (filename: string): string => {
-  return `/uploads/videos/${filename}`;
+export const getVideoUrl = (filename: string, req?: Request): string => {
+  // If request is available, build URL from it (handles LAN IPs used by mobile devices)
+  if (req) {
+    const proto = req.protocol || 'http';
+    const host = req.get('host');
+    if (host) {
+      return `${proto}://${host}/uploads/videos/${filename}`;
+    }
+  }
+
+  // Fallback to env-configured base URL or localhost
+  const rawBase =
+    process.env.FILE_BASE_URL ||
+    process.env.APP_URL ||
+    process.env.BASE_URL ||
+    `http://localhost:${process.env.PORT || 3000}`;
+
+  const base = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
+  return `${base}/uploads/videos/${filename}`;
 };
 
 // Delete video file helper

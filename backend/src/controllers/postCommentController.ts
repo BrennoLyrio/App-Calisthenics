@@ -58,7 +58,7 @@ export const createComment = async (req: AuthenticatedRequest, res: Response): P
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'nome', 'foto_perfil'],
+          attributes: ['id', 'nome'],
         },
       ],
     });
@@ -106,7 +106,7 @@ export const getComments = async (req: AuthenticatedRequest, res: Response): Pro
       comments.map(async (comment) => {
         const commentData = comment.toJSON();
         const user = await User.findByPk(comment.id_usuario, {
-          attributes: ['id', 'nome', 'foto_perfil'],
+          attributes: ['id', 'nome'],
         });
 
         return {

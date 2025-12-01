@@ -5,16 +5,16 @@ interface PostLikeAttributes {
   id: number;
   id_post: number;
   id_usuario: number;
-  createdAt?: Date;
+  created_at?: Date;
 }
 
-interface PostLikeCreationAttributes extends Optional<PostLikeAttributes, 'id' | 'createdAt'> {}
+interface PostLikeCreationAttributes extends Optional<PostLikeAttributes, 'id' | 'created_at'> {}
 
 class PostLike extends Model<PostLikeAttributes, PostLikeCreationAttributes> implements PostLikeAttributes {
   public id!: number;
   public id_post!: number;
   public id_usuario!: number;
-  public readonly createdAt!: Date;
+  public readonly created_at!: Date;
 
   // Static methods
   public static async findByPostAndUser(postId: number, userId: number): Promise<PostLike | null> {
@@ -68,7 +68,9 @@ PostLike.init(
     modelName: 'PostLike',
     tableName: 'post_likes',
     timestamps: true,
-    updatedAt: false, // Only createdAt, no updatedAt
+    createdAt: 'created_at',
+    updatedAt: false, // Only created_at, no updated_at
+    underscored: true,
     indexes: [
       {
         unique: true,

@@ -6,8 +6,10 @@ import Constants from 'expo-constants';
 // CONFIGURAÇÃO DO INTERVALO DE NOTIFICAÇÕES
 // ==========================================
 const NOTIFICATIONS_ENABLED = true; // true = ativado | false = desativado
-const NOTIFICATION_INTERVAL_SECONDS = 120; // Tempo em segundos (120 = 2 minutos)
+const NOTIFICATION_INTERVAL_SECONDS = 120; // Tempo em segundos (mínimo 60s para Android/iOS)
 const NOTIFICATION_INTERVAL_MS = NOTIFICATION_INTERVAL_SECONDS * 1000;
+// Intervalo mínimo suportado para repetição (iOS/Android)
+const MIN_REPEAT_SECONDS = 60;
 // ==========================================
 
 // Configurar comportamento quando notificação é recebida
@@ -46,6 +48,10 @@ const motivationalMessages = [
 
 class NotificationService {
   private notificationInterval: NodeJS.Timeout | null = null;
+  private recheckIntervalId: NodeJS.Timeout | null = null; // Para reagendamento automático
+  private initialized = false;
+  private notificationListener: Notifications.Subscription | null = null;
+  private responseListener: Notifications.Subscription | null = null;
   private isActive: boolean = false;
 
   /**
@@ -93,6 +99,84 @@ class NotificationService {
   private getRandomMessage(): string {
     const randomIndex = Math.floor(Math.random() * motivationalMessages.length);
     return motivationalMessages[randomIndex];
+  }
+
+  /**
+   * Agenda múltiplas notificações com mensagens diferentes
+   * Isso resolve o problema de `repeats: true` ter sempre a mesma mensagem
+   */
+  private async scheduleMultipleNotifications(count: number = 20): Promise<void> {
+    const repeatSeconds = Math.max(NOTIFICATION_INTERVAL_SECONDS, MIN_REPEAT_SECONDS);
+    
+    for (let i = 0; i < count; i++) {
+      const triggerSeconds = repeatSeconds * (i + 1);
+      
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '💪 Hora de Treinar!',
+          body: this.getRandomMessage(), // Cada notificação tem uma mensagem diferente!
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          vibrate: [0, 250, 250, 250],
+          data: {
+            type: 'motivational',
+            screen: 'Exercises',
+            timestamp: Date.now() + (triggerSeconds * 1000),
+          },
+        },
+        trigger: {
+          seconds: triggerSeconds,
+          channelId: 'default',
+        },
+      });
+    }
+    
+    console.log(`✅ ${count} notificações agendadas (${Math.floor(count * repeatSeconds / 60)} minutos de cobertura)`);
+  }
+
+  /**
+   * Sistema de reagendamento automático
+   * Verifica a cada X minutos se as notificações estão acabando e reagenda automaticamente
+   */
+  private startAutoReschedule(): void {
+    // Limpa qualquer intervalo anterior
+    if (this.recheckIntervalId) {
+      clearInterval(this.recheckIntervalId);
+    }
+
+    const repeatSeconds = Math.max(NOTIFICATION_INTERVAL_SECONDS, MIN_REPEAT_SECONDS);
+    const recheckIntervalMs = repeatSeconds * 1000 * 10; // Verifica a cada 10 notificações
+
+    console.log(`🔄 Sistema de reagendamento automático ativado (verifica a cada ${recheckIntervalMs / 60000} minutos)`);
+
+    this.recheckIntervalId = setInterval(async () => {
+      try {
+        const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+        const remainingCount = scheduled.length;
+
+        console.log(`📊 Notificações restantes: ${remainingCount}`);
+
+        // Se restarem menos de 5 notificações, reagenda mais 30
+        if (remainingCount < 5) {
+          console.log('⚠️ Poucas notificações restantes, reagendando...');
+          await this.scheduleMultipleNotifications(30);
+          console.log('✅ Notificações reagendadas automaticamente!');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar notificações:', error);
+      }
+    }, recheckIntervalMs);
+  }
+
+  /**
+   * Para o sistema de reagendamento automático
+   */
+  private stopAutoReschedule(): void {
+    if (this.recheckIntervalId) {
+      clearInterval(this.recheckIntervalId);
+      this.recheckIntervalId = null;
+      console.log('🛑 Sistema de reagendamento automático parado');
+    }
   }
 
   /**
@@ -173,30 +257,19 @@ class NotificationService {
       // ============================================
       // MODO BUILD NATIVO (funciona em background)
       // ============================================
+      const repeatSeconds = Math.max(NOTIFICATION_INTERVAL_SECONDS, MIN_REPEAT_SECONDS);
+
       console.log('📦 Build nativo detectado - notificações funcionarão em background');
-      console.log(`⏰ Intervalo: ${NOTIFICATION_INTERVAL_SECONDS} segundos`);
+      console.log(`⏰ Intervalo: ${repeatSeconds} segundos (${repeatSeconds / 60} minutos)`);
 
-      // Agenda notificação repetitiva
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '💪 Hora de Treinar!',
-          body: this.getRandomMessage(),
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          vibrate: [0, 250, 250, 250],
-          data: {
-            type: 'motivational',
-            screen: 'Exercises',
-          },
-        },
-        trigger: {
-          type: 'timeInterval' as const,
-          seconds: NOTIFICATION_INTERVAL_SECONDS,
-          repeats: true, // IMPORTANTE: Faz a notificação se repetir automaticamente
-        } as any,
-      });
+      // Agenda múltiplas notificações com mensagens DIFERENTES
+      // Isso resolve o problema de repeats: true ter sempre a mesma mensagem
+      await this.scheduleMultipleNotifications(30); // 30 notificações = 60 minutos (se intervalo = 120s)
 
-      console.log('✅ Notificação repetitiva agendada com sucesso');
+      // Inicia sistema de reagendamento automático
+      this.startAutoReschedule();
+
+      console.log('✅ Notificações agendadas com sucesso');
     }
 
     console.log(`✅ Sistema de notificações iniciado`);
@@ -213,6 +286,9 @@ class NotificationService {
       clearInterval(this.notificationInterval);
       this.notificationInterval = null;
     }
+
+    // Para o sistema de reagendamento automático
+    this.stopAutoReschedule();
 
     await Notifications.cancelAllScheduledNotificationsAsync();
     console.log('✅ Notificações paradas');

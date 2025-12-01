@@ -138,7 +138,10 @@ export const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionCard}>
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={() => navigation.navigate('Profile')}
+                >
                   <Ionicons name="person" size={32} color={Colors.primary} />
                   <Text style={styles.actionTitle}>Perfil</Text>
                   <Text style={styles.actionDescription}>

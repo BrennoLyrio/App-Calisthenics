@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystemLegacy from 'expo-file-system/legacy';
 import { API_BASE_URL, StorageKeys } from '../constants';
 import {
   AuthResponse,
@@ -103,6 +103,17 @@ class ApiService {
     const response: AxiosResponse<ApiResponse<{ user: User }>> = await this.api.put(
       '/auth/profile',
       userData
+    );
+    return response.data;
+  }
+
+  async changePassword(senha_atual: string, nova_senha: string): Promise<ApiResponse> {
+    const response: AxiosResponse<ApiResponse> = await this.api.put(
+      '/auth/change-password',
+      {
+        senha_atual,
+        nova_senha,
+      }
     );
     return response.data;
   }
@@ -438,31 +449,66 @@ class ApiService {
   // Community Methods
   async createPost(postData: CreatePostRequest, videoUri: string): Promise<CommunityPost> {
     try {
+      console.log('📤 Iniciando upload do vídeo...');
+      console.log('📤 Video URI:', videoUri);
+      console.log('📤 Post data:', postData);
+      
       // Get file info
-      const fileInfo = await FileSystem.getInfoAsync(videoUri);
+      // Usando API legada até migrarmos para o novo filesystem
+      const fileInfo = await FileSystemLegacy.getInfoAsync(videoUri);
+      console.log('📤 File info:', fileInfo);
+      
       if (!fileInfo.exists) {
         throw new Error('Vídeo não encontrado');
       }
 
+      if (!fileInfo.size || fileInfo.size === 0) {
+        throw new Error('Vídeo está vazio');
+      }
+
       // Get file extension from URI
+      // Expo Camera typically returns URIs like: file:///path/to/video.mp4
+      // or content:// URIs on Android
+      let extension = 'mp4'; // Default
+      let mimeType = 'video/mp4'; // Default
+      
+      // Try to extract extension from URI
       const uriParts = videoUri.split('.');
-      const extension = uriParts[uriParts.length - 1] || 'mp4';
-      const mimeType = extension === 'mov' ? 'video/quicktime' : 'video/mp4';
+      if (uriParts.length > 1) {
+        const possibleExt = uriParts[uriParts.length - 1]?.toLowerCase();
+        if (possibleExt && ['mp4', 'mov', 'm4v', 'avi', 'webm'].includes(possibleExt)) {
+          extension = possibleExt;
+          mimeType = extension === 'mov' ? 'video/quicktime' : 
+                     extension === 'm4v' ? 'video/mp4' :
+                     extension === 'avi' ? 'video/x-msvideo' :
+                     extension === 'webm' ? 'video/webm' : 'video/mp4';
+        }
+      }
+      
+      console.log('📤 File details:', {
+        extension,
+        mimeType,
+        size: fileInfo.size,
+        uri: videoUri,
+      });
 
       const formData = new FormData();
       
       // Append video file - React Native FormData format
-      formData.append('video', {
+      const videoFile: any = {
         uri: Platform.OS === 'android' ? videoUri : videoUri.replace('file://', ''),
         type: mimeType,
         name: `video.${extension}`,
-      } as any);
+      };
       
+      formData.append('video', videoFile as any);
       formData.append('tipo', postData.tipo);
       if (postData.titulo) formData.append('titulo', postData.titulo);
       if (postData.descricao) formData.append('descricao', postData.descricao);
       if (postData.duvida) formData.append('duvida', postData.duvida);
       if (postData.id_desafio_semanal) formData.append('id_desafio_semanal', postData.id_desafio_semanal.toString());
+
+      console.log('📤 Enviando requisição para o backend...');
 
       const response: AxiosResponse<ApiResponse<{ post: CommunityPost }>> = await this.api.post(
         '/community/posts',
@@ -471,12 +517,22 @@ class ApiService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 60000, // 60 seconds timeout for video upload
+          timeout: 120000, // 120 seconds timeout for video upload (aumentado)
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              console.log(`📤 Upload progress: ${percentCompleted}%`);
+            }
+          },
         }
       );
+      
+      console.log('✅ Upload concluído com sucesso!');
       return response.data.data!.post;
     } catch (error: any) {
-      console.error('Error in createPost:', error);
+      console.error('❌ Error in createPost:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       throw error;
     }
   }

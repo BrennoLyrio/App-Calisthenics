@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../Card';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiService } from '../../services/api';
-import { Colors, Typography, Spacing, BorderRadius } from '../../constants';
+import { Colors, Typography, Spacing, BorderRadius, API_BASE_URL } from '../../constants';
 import { CommunityPost } from '../../types';
 
 interface HelpTabProps {
@@ -67,6 +68,16 @@ export const HelpTab: React.FC<HelpTabProps> = ({ navigation }) => {
 
   const handlePostPress = (post: CommunityPost) => {
     navigation.navigate('PostDetail', { postId: post.id });
+  };
+
+  const getVideoUrl = (videoUrl: string): string => {
+    if (videoUrl.startsWith('http')) {
+      return videoUrl;
+    }
+    // Assuming backend serves videos at /uploads/videos/
+    // Get base URL from constants (remove /api/v1)
+    const baseUrl = API_BASE_URL.replace('/api/v1', '');
+    return `${baseUrl}${videoUrl}`;
   };
 
   if (isLoading) {
@@ -136,6 +147,23 @@ export const HelpTab: React.FC<HelpTabProps> = ({ navigation }) => {
                     </Text>
                   </View>
                 </View>
+                
+                {/* Video Preview */}
+                {post.video_url && (
+                  <View style={styles.videoContainer}>
+                    <Video
+                      source={{ uri: getVideoUrl(post.video_url) }}
+                      style={styles.video}
+                      useNativeControls={false}
+                      resizeMode={ResizeMode.COVER}
+                      shouldPlay={false}
+                      isMuted={true}
+                    />
+                    <View style={styles.playButtonOverlay}>
+                      <Ionicons name="play-circle" size={48} color={Colors.surface} />
+                    </View>
+                  </View>
+                )}
                 
                 {post.titulo && (
                   <Text style={styles.postTitle} numberOfLines={2}>
@@ -285,6 +313,29 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textSecondary,
     marginRight: Spacing.sm,
+  },
+  videoContainer: {
+    width: '100%',
+    height: 200,
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.dark,
+    position: 'relative',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  playButtonOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
 });
 

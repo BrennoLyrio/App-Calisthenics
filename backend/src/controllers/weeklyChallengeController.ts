@@ -58,7 +58,7 @@ export const getRanking = async (req: AuthenticatedRequest, res: Response): Prom
       posts.map(async (post, index) => {
         const postData = post.toJSON();
         const user = await User.findByPk(post.id_usuario, {
-          attributes: ['id', 'nome', 'foto_perfil'],
+          attributes: ['id', 'nome'],
         });
 
         return {

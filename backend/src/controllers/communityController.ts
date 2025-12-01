@@ -20,7 +20,18 @@ export const createPost = async (req: AuthenticatedRequest, res: Response): Prom
     const postData: CreatePostRequest = req.body;
     const file = req.file;
 
+    console.log('📝 Creating post - User:', user.id);
+    console.log('📝 Post data:', postData);
+    console.log('📝 File received:', file ? {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      filename: file.filename
+    } : 'NO FILE');
+
     if (!file) {
+      console.error('❌ No file received in request');
       res.status(400).json({
         success: false,
         message: 'Vídeo é obrigatório',
@@ -59,9 +70,11 @@ export const createPost = async (req: AuthenticatedRequest, res: Response): Prom
     }
 
     // Get video URL
-    const videoUrl = getVideoUrl(file.filename);
+    const videoUrl = getVideoUrl(file.filename, req);
+    console.log('📹 Video URL:', videoUrl);
 
     // Create post
+    console.log('💾 Creating post in database...');
     const post = await CommunityPost.create({
       id_usuario: user.id,
       tipo: postData.tipo,
@@ -77,12 +90,13 @@ export const createPost = async (req: AuthenticatedRequest, res: Response): Prom
     });
 
     // Fetch post with user data
+    console.log('🔍 Fetching post with user data...');
     const postWithUser = await CommunityPost.findByPk(post.id, {
       include: [
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'nome', 'foto_perfil'],
+          attributes: ['id', 'nome'], // Removido foto_perfil pois não existe no modelo User
         },
         {
           model: WeeklyChallenge,
@@ -92,23 +106,34 @@ export const createPost = async (req: AuthenticatedRequest, res: Response): Prom
       ],
     });
 
+    console.log('✅ Post created successfully:', postWithUser?.id);
+
     res.status(201).json({
       success: true,
       message: 'Post criado com sucesso',
       data: { post: postWithUser },
     } as ApiResponse);
   } catch (error: any) {
-    console.error('Error creating post:', error);
+    console.error('❌ Error creating post:', error?.message || error);
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code,
+      sql: (error as any)?.sql,
+    });
     
     // Clean up uploaded file if post creation failed
     if (req.file) {
+      console.log('🧹 Cleaning up uploaded file:', req.file.filename);
       deleteVideoFile(req.file.filename);
     }
 
     res.status(500).json({
       success: false,
       message: 'Erro ao criar post',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      // Expor a causa para facilitar debug do 500 durante desenvolvimento/testes
+      error: error?.message || 'Erro interno',
     } as ApiResponse);
   }
 };
@@ -179,9 +204,9 @@ export const getPosts = async (req: AuthenticatedRequest, res: Response): Promis
           let user = null;
           try {
             if (postData.id_usuario) {
-              user = await User.findByPk(postData.id_usuario, {
-                attributes: ['id', 'nome', 'foto_perfil'],
-              });
+            user = await User.findByPk(postData.id_usuario, {
+              attributes: ['id', 'nome'],
+            });
             }
           } catch (err: any) {
             console.error(`Error fetching user ${postData.id_usuario} for post ${post.id}:`, err?.message || err);
@@ -255,7 +280,7 @@ export const getPostById = async (req: AuthenticatedRequest, res: Response): Pro
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'nome', 'foto_perfil'],
+          attributes: ['id', 'nome'],
         },
         {
           model: WeeklyChallenge,

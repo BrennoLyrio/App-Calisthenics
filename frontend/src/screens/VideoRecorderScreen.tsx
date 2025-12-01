@@ -13,7 +13,7 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Colors, Typography, Spacing, BorderRadius } from '../constants';
 import Toast from 'react-native-toast-message';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystemLegacy from 'expo-file-system/legacy';
 
 interface VideoRecorderScreenProps {
   navigation: any;
@@ -39,21 +39,30 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
   const { user } = useAuth();
   
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
   const [isRecording, setIsRecording] = useState(false);
+  const [canStopRecording, setCanStopRecording] = useState(false);
   const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [duvida, setDuvida] = useState('');
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const videoRef = useRef<Video>(null);
+  const recordingStartTimeRef = useRef<number | null>(null);
+  const recordingPromiseRef = useRef<Promise<{ uri: string }> | null>(null);
+  const isRecordingStartedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // Request camera permission (only camera, no microphone needed)
+    // Request camera and microphone permissions
     if (!cameraPermission?.granted) {
       requestCameraPermission();
     }
-  }, [cameraPermission]);
+    if (Platform.OS === 'android' && !microphonePermission?.granted) {
+      requestMicrophonePermission();
+    }
+  }, [cameraPermission, microphonePermission]);
 
   const startRecording = async () => {
     if (!cameraRef.current) {
@@ -65,7 +74,16 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
       return;
     }
 
-    // Verify permissions before recording
+    if (!isCameraReady) {
+      Toast.show({
+        type: 'info',
+        text1: 'Aguarde...',
+        text2: 'Câmera ainda está preparando a gravação',
+      });
+      return;
+    }
+
+    // Verificar permissões de câmera
     if (!cameraPermission?.granted) {
       Toast.show({
         type: 'error',
@@ -74,7 +92,6 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
       });
       const result = await requestCameraPermission();
       if (!result?.granted) {
-        // Open app settings if permission denied
         Alert.alert(
           'Permissão Negada',
           'Por favor, conceda permissão de câmera nas configurações do aplicativo.',
@@ -86,56 +103,118 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
       }
       return;
     }
+
+    // Verificar permissão de microfone (Android)
+    if (Platform.OS === 'android' && !microphonePermission?.granted) {
+      Toast.show({
+        type: 'error',
+        text1: 'Permissão de Microfone Necessária',
+        text2: 'Android precisa de permissão de microfone para gravar vídeos',
+      });
+      const result = await requestMicrophonePermission();
+      if (!result?.granted) {
+        Alert.alert(
+          '⚠️ Permissão de Microfone Necessária',
+          'O Android requer permissão de microfone para gravar vídeos, mesmo sem áudio.\n\nPor favor:\n1. Vá em Configurações do App\n2. Ative a permissão de Microfone\n3. Tente novamente',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { 
+              text: 'Abrir Configurações', 
+              onPress: () => Linking.openSettings()
+            },
+          ]
+        );
+      }
+      return;
+    }
     
-    // For Android, we need RECORD_AUDIO permission even with mute: true
-    // Check if permission is granted by attempting to record
     setIsRecording(true);
+    setCanStopRecording(false);
+    isRecordingStartedRef.current = false;
     
     try {
-      // Record video without audio - mute: true = sem áudio
-      const video = await cameraRef.current.recordAsync({
-        maxDuration: 120, // 60 seconds max
-        quality: '720p',
-        mute: true, // SEM ÁUDIO - mas Android ainda precisa da permissão RECORD_AUDIO
-        videoBitrate: 8000000,
+      // IMPORTANTE: Aguardar mais tempo para garantir que a câmera está pronta
+      // Android precisa de tempo suficiente para inicializar
+      await new Promise(resolve => setTimeout(resolve, Platform.OS === 'android' ? 1500 : 800));
+      
+      if (!cameraRef.current) {
+        throw new Error('Câmera não disponível');
+      }
+      
+      console.log('🎥 Iniciando gravação...');
+      
+      // Iniciar a gravação
+      const recordingPromise = cameraRef.current.recordAsync({
+        maxDuration: 120,
       });
       
-      setRecordedVideo(video.uri);
-      setIsRecording(false);
+      recordingPromiseRef.current = recordingPromise;
+      recordingStartTimeRef.current = Date.now();
+      
+      // Aguardar tempo MÍNIMO antes de permitir parar
+      // Android precisa de pelo menos 3-4 segundos para realmente começar a gravar
+      const minimumRecordingDelay = Platform.OS === 'android' ? 4000 : 2000;
+      
+      await new Promise(resolve => setTimeout(resolve, minimumRecordingDelay));
+      
+      // Marcar que a gravação iniciou de fato
+      isRecordingStartedRef.current = true;
+      setCanStopRecording(true);
+      
+      console.log('✅ Gravação iniciada com sucesso');
+      
+      // Aguardar o fim da gravação (quando usuário parar ou atingir maxDuration)
+      const video = await recordingPromise;
+      
+      console.log('📹 Gravação finalizada:', video?.uri);
+      
+      if (video && video.uri) {
+        // Verificar se o arquivo existe e tem tamanho válido
+        // Usando a API legada até migrar completamente para o novo filesystem
+        const fileInfo = await FileSystemLegacy.getInfoAsync(video.uri);
+        
+        if (fileInfo.exists && fileInfo.size && fileInfo.size > 0) {
+          console.log('✅ Vídeo válido - Tamanho:', fileInfo.size, 'bytes');
+          setRecordedVideo(video.uri);
+        } else {
+          throw new Error('Vídeo gravado está vazio ou corrompido');
+        }
+      } else {
+        throw new Error('Vídeo não foi gravado corretamente');
+      }
+      
     } catch (error: any) {
       console.error('❌ Error recording video:', error);
       console.error('Error message:', error?.message);
       console.error('Error code:', error?.code);
       
-      setIsRecording(false);
-      
-      // Check if it's a permission error
-      if (error?.message?.includes('RECORD_AUDIO') || error?.message?.includes('RECORD_AUDIO') || error?.code === 'PERMISSION_DENIED') {
-        // Audio permission error - Android requires RECORD_AUDIO permission even with mute: true
+      // Verificar se é erro de "stopped before any data"
+      if (error?.message?.includes('stopped before any data') || 
+          error?.message?.includes('Recording was stopped') ||
+          error?.code === 'ERR_VIDEO_RECORDING_FAILED') {
+        
+        Alert.alert(
+          '⚠️ Gravação Muito Curta',
+          'A gravação precisa durar pelo menos 3-4 segundos.\n\nDica: Após apertar GRAVAR, aguarde alguns segundos antes de PARAR.',
+          [{ text: 'Entendi', style: 'default' }]
+        );
+        
+      } else if (error?.message?.includes('RECORD_AUDIO') || 
+                 error?.message?.includes('permission') || 
+                 error?.code === 'PERMISSION_DENIED') {
+        
         Alert.alert(
           '⚠️ Permissão de Microfone Necessária',
-          'Mesmo que você já tenha concedido a permissão, o Expo Go pode não estar reconhecendo.\n\nTente:\n\n1. Fechar completamente o Expo Go (force close)\n2. Reabrir o Expo Go\n3. Reconectar ao servidor\n4. Tentar gravar novamente\n\nOU abra as configurações para verificar se a permissão está realmente ativada.',
+          'O Android requer permissão de microfone para gravar vídeos, mesmo sem áudio.\n\nPor favor:\n1. Vá em Configurações do App\n2. Ative a permissão de Microfone\n3. Tente novamente',
           [
             { text: 'Cancelar', style: 'cancel' },
             { 
               text: 'Abrir Configurações', 
-              onPress: () => {
-                Linking.openSettings();
-              }
+              onPress: () => Linking.openSettings()
             },
-            {
-              text: 'Recarregar App',
-              onPress: () => {
-                // Force reload by navigating back and telling user to reload
-                Alert.alert(
-                  'Recarregar App',
-                  'Por favor:\n1. Feche completamente o Expo Go\n2. Abra novamente\n3. Reconecte ao servidor\n4. Tente novamente',
-                  [{ text: 'OK' }]
-                );
-              }
-            }
           ]
         );
+        
       } else {
         Toast.show({
           type: 'error',
@@ -143,12 +222,85 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
           text2: error.message || 'Tente novamente',
         });
       }
+    } finally {
+      // Resetar estado
+      setIsRecording(false);
+      setCanStopRecording(false);
+      recordingStartTimeRef.current = null;
+      recordingPromiseRef.current = null;
+      isRecordingStartedRef.current = false;
     }
   };
 
-  const stopRecording = () => {
-    if (cameraRef.current) {
-      cameraRef.current.stopRecording();
+  const stopRecording = async () => {
+    console.log('🛑 Tentando parar gravação...');
+    console.log('canStopRecording:', canStopRecording);
+    console.log('isRecordingStartedRef:', isRecordingStartedRef.current);
+    
+    // Verificar se pode parar
+    if (!canStopRecording || !isRecordingStartedRef.current) {
+      Toast.show({
+        type: 'info',
+        text1: 'Aguarde...',
+        text2: 'A gravação ainda está iniciando. Aguarde alguns segundos.',
+      });
+      return;
+    }
+    
+    if (!cameraRef.current || !isRecording) {
+      console.log('⚠️ Não está gravando ou câmera não disponível');
+      return;
+    }
+    
+    try {
+      // Calcular tempo de gravação
+      if (recordingStartTimeRef.current) {
+        const elapsed = Date.now() - recordingStartTimeRef.current;
+        console.log('⏱️ Tempo de gravação:', elapsed, 'ms');
+        
+        // Garantir tempo mínimo de gravação (3 segundos)
+        const minRecordingTime = 3000;
+        
+        if (elapsed < minRecordingTime) {
+          const remainingTime = minRecordingTime - elapsed;
+          console.log('⏳ Aguardando tempo mínimo...', remainingTime, 'ms');
+          
+          Toast.show({
+            type: 'info',
+            text1: 'Aguarde...',
+            text2: `Gravando por mais ${Math.ceil(remainingTime / 1000)} segundos`,
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+      }
+      
+      console.log('✋ Parando gravação agora...');
+      
+      // Desabilitar botão de parar
+      setCanStopRecording(false);
+      
+      // Parar a gravação
+      if (cameraRef.current) {
+        await cameraRef.current.stopRecording();
+        console.log('✅ Comando de parar enviado');
+      }
+      
+    } catch (error) {
+      console.error('❌ Erro ao parar gravação:', error);
+      
+      // Mesmo com erro, resetar estados
+      setIsRecording(false);
+      setCanStopRecording(false);
+      recordingStartTimeRef.current = null;
+      recordingPromiseRef.current = null;
+      isRecordingStartedRef.current = false;
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao parar gravação',
+        text2: 'Tente gravar novamente',
+      });
     }
   };
 
@@ -157,6 +309,11 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
     setTitulo('');
     setDescricao('');
     setDuvida('');
+    setIsCameraReady(false);
+    setCanStopRecording(false);
+    recordingStartTimeRef.current = null;
+    recordingPromiseRef.current = null;
+    isRecordingStartedRef.current = false;
   };
 
   const handleUpload = async () => {
@@ -219,7 +376,7 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
     }
   };
 
-  if (!cameraPermission) {
+  if (!cameraPermission || !microphonePermission) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -227,23 +384,36 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
     );
   }
 
-  if (!cameraPermission.granted) {
+  if (!cameraPermission.granted || (Platform.OS === 'android' && !microphonePermission.granted)) {
     return (
       <View style={styles.container}>
         <SafeAreaView style={styles.content}>
           <View style={styles.permissionContainer}>
             <Ionicons name="camera-outline" size={64} color={Colors.primary} />
-            <Text style={styles.permissionTitle}>Permissão Necessária</Text>
+            <Text style={styles.permissionTitle}>Permissões Necessárias</Text>
             <Text style={styles.permissionText}>
-              Precisamos de acesso à câmera para gravar vídeos{'\n'}
-              (Os vídeos serão gravados sem áudio)
+              Precisamos de acesso à câmera{Platform.OS === 'android' ? ' e ao microfone' : ''} para gravar vídeos
+              {'\n\n'}
+              {Platform.OS === 'android' && '⚠️ Android requer permissão de microfone mesmo para vídeos sem áudio'}
             </Text>
             <TouchableOpacity
               style={styles.permissionButton}
-              onPress={requestCameraPermission}
+              onPress={async () => {
+                await requestCameraPermission();
+                if (Platform.OS === 'android') {
+                  await requestMicrophonePermission();
+                }
+              }}
               activeOpacity={0.8}
             >
-              <Text style={styles.permissionButtonText}>Conceder Permissão</Text>
+              <Text style={styles.permissionButtonText}>Conceder Permissões</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.permissionButton, { backgroundColor: Colors.textSecondary, marginTop: Spacing.sm }]}
+              onPress={() => Linking.openSettings()}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.permissionButtonText}>Abrir Configurações</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -292,6 +462,11 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
                     ref={cameraRef}
                     style={styles.camera}
                     facing="front"
+                    mode="video"
+                    videoQuality={Platform.OS === 'android' ? '480p' : '720p'}
+                    videoBitrate={Platform.OS === 'android' ? 3000000 : 8000000}
+                    mute={false}
+                    onCameraReady={() => setIsCameraReady(true)}
                   />
                   <View style={styles.cameraOverlay}>
                     <View style={styles.recordingControls}>
@@ -305,11 +480,17 @@ export const VideoRecorderScreen: React.FC<VideoRecorderScreenProps> = ({ naviga
                         </TouchableOpacity>
                       ) : (
                         <TouchableOpacity
-                          style={styles.stopButton}
+                          style={[styles.stopButton, !canStopRecording && styles.stopButtonDisabled]}
                           onPress={stopRecording}
-                          activeOpacity={0.8}
+                          disabled={!canStopRecording}
+                          activeOpacity={canStopRecording ? 0.8 : 1}
                         >
                           <View style={styles.stopButtonInner} />
+                          {!canStopRecording && (
+                            <View style={styles.recordingIndicator}>
+                              <ActivityIndicator size="small" color={Colors.surface} />
+                            </View>
+                          )}
                         </TouchableOpacity>
                       )}
                     </View>
@@ -508,6 +689,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.surface,
   },
+  stopButtonDisabled: {
+    opacity: 0.6,
+  },
+  recordingIndicator: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+  },
   videoContainer: {
     flex: 1,
     position: 'relative',
@@ -611,4 +800,3 @@ const styles = StyleSheet.create({
     color: Colors.surface,
   },
 });
-

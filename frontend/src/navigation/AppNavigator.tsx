@@ -31,6 +31,7 @@ import {
   ArticleDetailScreen,
   VideoRecorderScreen,
   PostDetailScreen,
+  ProfileScreen,
 } from '../screens';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -89,6 +90,7 @@ export const AppNavigator: React.FC = () => {
             <Stack.Screen name="ExercisePreview" component={ExercisePreviewScreen} />
             <Stack.Screen name="WorkoutSession" component={WorkoutSessionScreen} />
             <Stack.Screen name="WorkoutCompleted" component={WorkoutCompletedScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
           </>
         ) : (
           // Unauthenticated screens
